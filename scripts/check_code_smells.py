@@ -290,7 +290,7 @@ def check_file(path: Path) -> list[str]:
             degraded = read_vars & fallback_vars
             for var_name in degraded:
                 violations.append(
-                    f"{path}:{node.lineno}: silent degradation — variable "
+                    f"{path}:{node.lineno}: silent degradation -- variable "
                     f"'{var_name}' falls back to default when file missing "
                     f"(use FileNotFoundError instead)"
                 )
