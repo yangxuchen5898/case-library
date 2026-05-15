@@ -1,4 +1,63 @@
-AGENTS.md
-CLAUDE.md
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# === Virtual Environment ===
+venv/
+ENV/
+env/
+
+# === Environment Variables ===
+.env
+.env.local
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Development Tools (not production code) ===
+scripts/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
+
+# === Test / Coverage ===
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# === Uploads & Data ===
+data/uploads/
+*.db-journal
+
+# === Temporary Review Files ===
 database_review_findings.md
 database_review_context.md

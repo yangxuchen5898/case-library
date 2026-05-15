@@ -1,0 +1,19 @@
+{
+  "workflow": {
+    "mode": "interactive",
+    "commit_docs": false,
+    "research_enabled": false,
+    "plan_checker_enabled": true,
+    "nyquist_validation_enabled": false,
+    "pattern_mapper": false,
+    "tdd_mode": false,
+    "mvp_mode": false
+  },
+  "model": {
+    "profile": "balanced"
+  },
+  "planning": {
+    "commit_docs": false,
+    "search_gitignored": false
+  }
+}
