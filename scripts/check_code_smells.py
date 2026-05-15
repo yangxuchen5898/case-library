@@ -80,6 +80,171 @@ def _is_dangerous_in_pattern(node: ast.AST) -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Check 3 helpers: file-existence check + fallback
+# ---------------------------------------------------------------------------
+
+
+def _is_exists_call(node: ast.expr) -> bool:
+    """Return True if node is a path.exists() or os.path.exists() call."""
+    if isinstance(node, ast.Call):
+        # path.exists() — Attribute(value=Name, attr='exists')
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "exists":
+            return True
+        # os.path.exists(...)
+        if (
+            isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Attribute)
+            and isinstance(node.func.value.value, ast.Name)
+            and node.func.value.value.id == "os"
+            and node.func.value.attr == "path"
+            and node.func.attr == "exists"
+        ):
+            return True
+    return False
+
+
+def _is_file_read_call(node: ast.expr) -> bool:
+    """Return True if node is a file-reading call (read_text / read_bytes / read_json / open(...).read() etc.)."""
+    if not isinstance(node, ast.Call):
+        return False
+    # path.read_text() / read_bytes() / read_json()
+    if isinstance(node.func, ast.Attribute) and node.func.attr in {
+        "read_text",
+        "read_bytes",
+        "read_json",
+        "read",
+    }:
+        return True
+    return False
+
+
+def _is_open_call(node: ast.expr) -> bool:
+    """Return True if node is an open(...) call."""
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "open"
+
+
+def _collect_assigned_vars(body: list[ast.stmt]) -> set[str]:
+    """Collect simple variable names assigned in a statement list."""
+    names: set[str] = set()
+    for stmt in body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(stmt, ast.With):
+            for item in stmt.items:
+                if item.optional_vars and isinstance(item.optional_vars, ast.Name):
+                    names.add(item.optional_vars.id)
+            # Also recurse into the with body
+            names |= _collect_assigned_vars(stmt.body)
+        elif isinstance(stmt, ast.If):
+            names |= _collect_assigned_vars(stmt.body)
+            names |= _collect_assigned_vars(stmt.orelse)
+        elif isinstance(stmt, ast.Try):
+            names |= _collect_assigned_vars(stmt.body)
+            for handler in stmt.handlers:
+                names |= _collect_assigned_vars(handler.body)
+            names |= _collect_assigned_vars(stmt.orelse)
+            names |= _collect_assigned_vars(stmt.finalbody)
+        elif isinstance(stmt, (ast.For, ast.While)):
+            names |= _collect_assigned_vars(stmt.body)
+            names |= _collect_assigned_vars(stmt.orelse)
+    return names
+
+
+def _collect_file_read_vars(body: list[ast.stmt]) -> set[str]:
+    """Collect variable names that receive a file-read result in the statement list."""
+    names: set[str] = set()
+    for stmt in body:
+        if isinstance(stmt, ast.Assign):
+            # e.g. data = path.read_text()
+            if stmt.value and _is_file_read_call(stmt.value):
+                for target in stmt.targets:
+                    if isinstance(target, ast.Name):
+                        names.add(target.id)
+            # e.g. data = open(path).read()
+            if isinstance(stmt.value, ast.Call) and _is_file_read_call(stmt.value):
+                for target in stmt.targets:
+                    if isinstance(target, ast.Name):
+                        names.add(target.id)
+            # e.g. data = open(path, 'r').read()
+            if (
+                isinstance(stmt.value, ast.Call)
+                and isinstance(stmt.value.func, ast.Attribute)
+                and stmt.value.func.attr == "read"
+                and stmt.value.args
+                and isinstance(stmt.value.func.value, ast.Call)
+                and _is_open_call(stmt.value.func.value)
+            ):
+                for target in stmt.targets:
+                    if isinstance(target, ast.Name):
+                        names.add(target.id)
+        elif isinstance(stmt, ast.With):
+            # with open(path) as f: data = f.read()
+            for item in stmt.items:
+                if item.context_expr and _is_open_call(item.context_expr):
+                    for sub in stmt.body:
+                        if isinstance(sub, ast.Assign) and isinstance(sub.value, ast.Call):
+                            if (
+                                isinstance(sub.value.func, ast.Attribute)
+                                and sub.value.func.attr == "read"
+                            ):
+                                for target in sub.targets:
+                                    if isinstance(target, ast.Name):
+                                        names.add(target.id)
+            names |= _collect_file_read_vars(stmt.body)
+        elif isinstance(stmt, ast.If):
+            names |= _collect_file_read_vars(stmt.body)
+            names |= _collect_file_read_vars(stmt.orelse)
+        elif isinstance(stmt, ast.Try):
+            names |= _collect_file_read_vars(stmt.body)
+            for handler in stmt.handlers:
+                names |= _collect_file_read_vars(handler.body)
+            names |= _collect_file_read_vars(stmt.orelse)
+            names |= _collect_file_read_vars(stmt.finalbody)
+        elif isinstance(stmt, (ast.For, ast.While)):
+            names |= _collect_file_read_vars(stmt.body)
+            names |= _collect_file_read_vars(stmt.orelse)
+    return names
+
+
+def _collect_fallback_vars(body: list[ast.stmt]) -> set[str]:
+    """Collect variable names assigned a default fallback value in the statement list."""
+    names: set[str] = set()
+    for stmt in body:
+        if isinstance(stmt, ast.Assign):
+            # Check if RHS is a simple literal default: "", [], {}, None, or other constant
+            is_default = False
+            if isinstance(stmt.value, ast.Constant) and stmt.value.value in ("", [], {}, None):
+                is_default = True
+            elif isinstance(stmt.value, ast.List) and len(stmt.value.elts) == 0:
+                is_default = True
+            elif isinstance(stmt.value, ast.Dict) and len(stmt.value.keys) == 0:
+                is_default = True
+            elif isinstance(stmt.value, ast.Constant) and stmt.value.value is None:
+                is_default = True
+            if is_default:
+                for target in stmt.targets:
+                    if isinstance(target, ast.Name):
+                        names.add(target.id)
+        elif isinstance(stmt, ast.If):
+            names |= _collect_fallback_vars(stmt.body)
+            names |= _collect_fallback_vars(stmt.orelse)
+        elif isinstance(stmt, ast.Try):
+            names |= _collect_fallback_vars(stmt.body)
+            for handler in stmt.handlers:
+                names |= _collect_fallback_vars(handler.body)
+            names |= _collect_fallback_vars(stmt.orelse)
+            names |= _collect_fallback_vars(stmt.finalbody)
+        elif isinstance(stmt, (ast.For, ast.While)):
+            names |= _collect_fallback_vars(stmt.body)
+            names |= _collect_fallback_vars(stmt.orelse)
+        elif isinstance(stmt, ast.With):
+            names |= _collect_fallback_vars(stmt.body)
+    return names
+
+
 def check_file(path: Path) -> list[str]:
     """Check a single Python file and return list of violation messages."""
     violations: list[str] = []
@@ -117,6 +282,18 @@ def check_file(path: Path) -> list[str]:
                             f"bidirectional `in` heuristic (e.g. `a in b or b in a`)"
                         )
                         # Report once per function is enough, but multiple lines are okay
+
+        # --- Check 3: file existence check + fallback (silent degradation) ---
+        if isinstance(node, ast.If) and _is_exists_call(node.test) and node.orelse:
+            read_vars = _collect_file_read_vars(node.body)
+            fallback_vars = _collect_fallback_vars(node.orelse)
+            degraded = read_vars & fallback_vars
+            for var_name in degraded:
+                violations.append(
+                    f"{path}:{node.lineno}: silent degradation — variable "
+                    f"'{var_name}' falls back to default when file missing "
+                    f"(use FileNotFoundError instead)"
+                )
 
     return violations
 
