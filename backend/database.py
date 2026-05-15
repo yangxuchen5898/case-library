@@ -44,8 +44,19 @@ _client: Optional[MongoClient] = None
 
 def get_mongo_client() -> MongoClient:
     global _client
+    if _client is not None:
+        try:
+            _client.admin.command("ping", serverSelectionTimeoutMS=2000)
+        except Exception:
+            _client.close()
+            _client = None
     if _client is None:
-        _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=MONGODB_TIMEOUT_MS)
+        _client = MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=MONGODB_TIMEOUT_MS,
+            maxPoolSize=10,
+            minPoolSize=1,
+        )
     return _client
 
 

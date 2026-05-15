@@ -1,6 +1,6 @@
 // 强国有我大思政课案例库 - 前端JavaScript
 
-const API_BASE = "http://localhost:8001/api";
+const API_BASE = window.location.origin + "/api";
 
 // 用户认证相关全局变量
 let currentUser = null;
