@@ -1,6 +1,9 @@
+import pytest
+
 from backend.response_parser import parse_classification
 
 
+@pytest.mark.unit
 def test_parse_full_response():
     raw = {
         "types": ["TYPE_A", "TYPE_B"],
@@ -18,6 +21,7 @@ def test_parse_full_response():
     assert result["main_person"] == "some person"
 
 
+@pytest.mark.unit
 def test_parse_chinese_keys():
     raw = {
         "主类型": ["TYPE_C"],
@@ -34,6 +38,7 @@ def test_parse_chinese_keys():
     assert result["main_person"] == "person in chinese"
 
 
+@pytest.mark.unit
 def test_parse_string_types():
     raw = {
         "types": "TYPE_A,TYPE_B",
@@ -42,6 +47,7 @@ def test_parse_string_types():
     assert result["types"] == ["TYPE_A", "TYPE_B"]
 
 
+@pytest.mark.unit
 def test_parse_exact_theme_match():
     raw = {
         "themes": ["上海实践", "实践"],
@@ -51,12 +57,14 @@ def test_parse_exact_theme_match():
     assert "实践" not in result["themes"]
 
 
+@pytest.mark.unit
 def test_parse_fallback_title():
     raw = {}
     result = parse_classification(raw, fallback_title="fallback")
     assert result["title"] == "fallback"
 
 
+@pytest.mark.unit
 def test_parse_empty_response():
     raw = {}
     result = parse_classification(raw)
@@ -68,6 +76,7 @@ def test_parse_empty_response():
     assert result["main_person"] == ""
 
 
+@pytest.mark.unit
 def test_parse_non_string_type_ignored():
     raw = {
         "types": ["TYPE_A", {"nested": "dict"}, "TYPE_B"],
