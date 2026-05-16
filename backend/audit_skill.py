@@ -235,10 +235,9 @@ class SoftAuditor:
 
     def _build_system_prompt(self) -> str:
         """读取 SKILL.md 并构造软审核系统提示词。"""
-        if _SKILL_PATH.exists():
-            skill_doc = _SKILL_PATH.read_text(encoding="utf-8")
-        else:
-            skill_doc = ""
+        if not _SKILL_PATH.exists():
+            raise FileNotFoundError(f"审核标准文件不存在: {_SKILL_PATH}")
+        skill_doc = _SKILL_PATH.read_text(encoding="utf-8")
         return (
             "你是一名思政案例库的质量审核助手。请对以下案例进行软审核，"
             "标记疑似问题但不做出通过/不通过判断。\n\n"
