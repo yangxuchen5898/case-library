@@ -1,7 +1,5 @@
 """事实核查模块的单元测试（全部使用 Mock，不发起真实网络请求）。"""
 
-import json
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -50,8 +48,6 @@ def _make_mock_response(body: bytes, code: int = 200, final_url: str = None):
     mock.getcode.return_value = code
     mock.geturl.return_value = final_url or "http://example.com/final"
     mock.headers = {"Content-Type": "text/html; charset=utf-8"}
-    mock.__enter__ = lambda self: self
-    mock.__exit__ = lambda *args: None
     return mock
 
 
