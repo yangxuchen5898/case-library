@@ -59,10 +59,10 @@ def _extract_themes(raw: dict) -> list[str]:
 
 
 def _pick_field(raw: dict, aliases: list[str], default=""):
-    """Pick first non-empty value from raw using aliases."""
+    """Pick first non-empty value from raw using aliases, coerced to str."""
     for alias in aliases:
         if alias in raw:
             value = raw[alias]
             if value is not None and value != "":
-                return value
+                return str(value)
     return default
