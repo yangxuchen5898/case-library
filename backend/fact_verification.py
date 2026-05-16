@@ -7,7 +7,6 @@
 """
 
 import re
-import time
 from html.parser import HTMLParser
 from typing import List, Optional
 from urllib.error import HTTPError, URLError
