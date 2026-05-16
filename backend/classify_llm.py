@@ -20,6 +20,8 @@ def build_system_prompt() -> str:
 
 def _load_prompt(skill_name: str, **kwargs) -> str:
     path = Path(__file__).resolve().parent.parent / "skills" / skill_name / "prompt.md"
+    if not path.exists():
+        raise FileNotFoundError(f"提示词模板文件不存在: {path}")
     template = path.read_text(encoding="utf-8")
     for key, value in kwargs.items():
         template = template.replace(f"{{{{{key}}}}}", str(value))
