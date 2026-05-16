@@ -48,6 +48,7 @@ def _make_mock_response(body: bytes, code: int = 200, final_url: str = None):
     mock.getcode.return_value = code
     mock.geturl.return_value = final_url or "http://example.com/final"
     mock.headers = {"Content-Type": "text/html; charset=utf-8"}
+    mock.__enter__.return_value = mock
     return mock
 
 

@@ -191,7 +191,7 @@ class LLMClient:
                 return text[idx:end]
             except json.JSONDecodeError:
                 idx = text.find('{', idx + 1)
-        return "{}"
+        raise ValueError("LLM 响应中未找到有效的 JSON 对象")
 
 
 def get_llm_client(model: Optional[str] = None) -> LLMClient:
