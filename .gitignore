@@ -61,3 +61,6 @@ data/uploads/
 # === Temporary Review Files ===
 database_review_findings.md
 database_review_context.md
+
+# === Project Instructions ===
+CLAUDE.md
