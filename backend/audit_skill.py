@@ -8,21 +8,13 @@ AuditReport（审核报告生成）以及统一的 `audit_case()` 入口。
   - fact_verification（案例内 URL/引用核查）
 """
 
-import json
 import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
-try:
-    from llm_client import get_llm_client
-except ImportError:
-    from backend.llm_client import get_llm_client
-
-try:
-    from fact_verification import verify_claim
-except ImportError:
-    from backend.fact_verification import verify_claim
+from backend.llm_client import get_llm_client
+from backend.fact_verification import verify_claim
 
 
 # ---------------------------------------------------------------------------
