@@ -2,10 +2,7 @@
 
 from pathlib import Path
 
-try:
-    from llm_client import get_llm_client
-except ImportError:
-    from backend.llm_client import get_llm_client
+from backend.llm_client import get_llm_client
 
 from backend.response_parser import parse_classification
 
