@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:e2e": "playwright test",
-    "test:e2e:mock": "playwright test tests/e2e/alpha-audit.spec.js --project=chromium-desktop --project=chromium-mobile",
+    "test:e2e:mock": "playwright test tests/e2e/alpha-audit.spec.js tests/e2e/ai-errors.spec.js --project=chromium-desktop --project=chromium-mobile",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {

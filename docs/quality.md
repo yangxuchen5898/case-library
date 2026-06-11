@@ -38,7 +38,7 @@ docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 ```
 
 当前 `e2e` profile 运行 mock E2E 命令 `npm run test:e2e:mock`，对应
-`frontend/tests/e2e/alpha-audit.spec.js`：
+`frontend/tests/e2e/alpha-audit.spec.js` 和 `frontend/tests/e2e/ai-errors.spec.js`：
 
 - `chromium-desktop`：默认管理员强制改密、创建流作者身份不读旧草稿、教师创建/AI
   自查/提交、教师历史版本、管理员版本化段落批注、退回修改后教师查看人工批注并复制
@@ -55,9 +55,9 @@ worker/agent prompt、rmux capture 和一次性报告，不作为测试产物目
 段落批注和提交流程，不证明外部模型 API 已被真实调用。AI disabled 场景有前端提示
 回归测试，验证后端返回 `disabled` 时页面不崩溃且展示明确错误。
 
-前端测试目录当前先按 E2E 分到 `frontend/tests/e2e/`。这只是目录规范化的第一步；
-后续仍应按 #89 继续补 `unit/`、`component/`、`visual/` 或等价分层，并把当前
-`alpha-audit.spec.js` 继续拆成职责更单一的 spec。
+前端测试目录当前先按 E2E 分到 `frontend/tests/e2e/`，并已把 AI 错误提示回归从
+主 alpha audit spec 拆出。后续仍应按 #89 继续补 `unit/`、`component/`、
+`visual/` 或等价分层，并继续把 `alpha-audit.spec.js` 拆成职责更单一的 spec。
 
 真实 AI 外呼 smoke 是显式 opt-in，不属于默认门禁。仅在 `.env` 中配置真实
 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODELS`、`AI_DEFAULT_MODEL` 且显式启用
