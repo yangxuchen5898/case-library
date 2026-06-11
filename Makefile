@@ -28,7 +28,7 @@ smoke:
 	python backend/smoke_test_mongo.py
 
 smoke-e2e:
-	cd frontend && npm run test:e2e
+	cd frontend && npm run test:e2e:mock
 
 real-ai-smoke:
 	python backend/real_ai_review_smoke.py --require-config

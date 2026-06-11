@@ -37,7 +37,8 @@ docker compose -f docker-compose.dev.yml up -d --build
 docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 ```
 
-当前 `e2e` profile 运行 `frontend/tests/audit.spec.js`：
+当前 `e2e` profile 运行 mock E2E 命令 `npm run test:e2e:mock`，对应
+`frontend/tests/audit.spec.js`：
 
 - `chromium-desktop`：默认管理员强制改密、创建流作者身份不读旧草稿、教师创建/AI
   自查/提交、教师历史版本、管理员版本化段落批注、退回修改后教师查看人工批注并复制
