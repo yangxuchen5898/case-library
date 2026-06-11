@@ -45,6 +45,23 @@ async function cleanupAuditCases(page, titlePrefix = "Audit案例 ") {
   }
 }
 
+async function fillCaseToAiReviewStep(page, title, content, sourceMaterial) {
+  await page.getByRole("link", { name: "创建案例" }).click();
+  await page.getByLabel(/案例标题/).fill(title);
+  await page.getByLabel(/所属部门\/学院/).fill("马克思主义学院");
+  await page.getByRole("button", { name: "继续" }).click();
+
+  await page.locator("#ccf-content").fill(content);
+  await page.locator("#ccf-source").fill(sourceMaterial);
+  await page.getByRole("button", { name: "继续" }).click();
+
+  await page.locator("#ccf-type").selectOption("TYPE_A");
+  await page.locator("#ccf-theme").selectOption("铸魂育人");
+  await page.getByRole("button", { name: "继续" }).click();
+
+  await expect(page.getByRole("heading", { name: "提交前自查" })).toBeVisible();
+}
+
 test.describe("manual audit candidate flows", () => {
   test("mobile create flow keeps critical screens readable", async ({ page }, testInfo) => {
     test.skip(
@@ -174,25 +191,56 @@ test.describe("manual audit candidate flows", () => {
     await logout(page);
 
     await login(page, USER);
-    await page.getByRole("link", { name: "创建案例" }).click();
-    await page.getByLabel(/案例标题/).fill(`AI禁用提示案例 ${Date.now()}`);
-    await page.getByLabel(/所属部门\/学院/).fill("马克思主义学院");
-    await page.getByRole("button", { name: "继续" }).click();
-
-    await page.locator("#ccf-content").fill("本案例用于验证 AI 禁用时前端提示清晰，不误导作者。");
-    await page.locator("#ccf-source").fill("来源材料：AI 禁用提示测试。");
-    await page.getByRole("button", { name: "继续" }).click();
-
-    await page.locator("#ccf-type").selectOption("TYPE_A");
-    await page.locator("#ccf-theme").selectOption("铸魂育人");
-    await page.getByRole("button", { name: "继续" }).click();
-
-    await expect(page.getByRole("heading", { name: "提交前自查" })).toBeVisible();
+    await fillCaseToAiReviewStep(
+      page,
+      `AI禁用提示案例 ${Date.now()}`,
+      "本案例用于验证 AI 禁用时前端提示清晰，不误导作者。",
+      "来源材料：AI 禁用提示测试。"
+    );
     await page.getByRole("button", { name: "生成只读审核版本" }).click();
     await expect(page.getByText("AI 审核功能未启用")).toBeVisible();
     await expect(page.getByText(/已生成 v\d+ 只读审核版本/)).toHaveCount(0);
     await expect(page.getByText("AI 批注")).toHaveCount(0);
     await capture(page, testInfo, "create-step-4-ai-disabled");
+  });
+
+  test("AI review unavailable response keeps the author on an explicit error state", async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "chromium-desktop",
+      "desktop-only AI unavailable messaging regression"
+    );
+
+    await page.route("**/api/cases/*/ai-review", async (route) => {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: false,
+          status: "unavailable",
+          detail: "AI 服务暂不可用，请稍后重试",
+        }),
+      });
+    });
+
+    await page.goto("/");
+    await login(page, ADMIN);
+    await cleanupAuditCases(page, "AI不可用提示案例 ");
+    await logout(page);
+
+    await login(page, USER);
+    await fillCaseToAiReviewStep(
+      page,
+      `AI不可用提示案例 ${Date.now()}`,
+      "本案例用于验证 AI 服务异常时前端提示清晰，不误导作者。",
+      "来源材料：AI 服务异常提示测试。"
+    );
+    await page.getByRole("button", { name: "生成只读审核版本" }).click();
+    await expect(page.getByText("AI 服务暂不可用，请稍后重试")).toBeVisible();
+    await expect(page.getByText(/已生成 v\d+ 只读审核版本/)).toHaveCount(0);
+    await expect(page.getByText("AI 批注")).toHaveCount(0);
+    await capture(page, testInfo, "create-step-4-ai-unavailable");
   });
 
   test("author submit -> admin approve -> public search, with audit screenshots", async ({
