@@ -71,6 +71,22 @@ docker compose run --rm -e AI_REVIEW_ENABLED=true app make real-ai-smoke
 provider，不打印 key、base URL 或完整 prompt。无 key 或 disabled 时应验证
 disabled/unconfigured 提示，而不是声称真实 AI 已通过。
 
+## Alpha 覆盖矩阵
+
+| 场景 | 当前证据 | 备注 |
+| --- | --- | --- |
+| 教师创建正文、来源材料、类型和主题 | 后端集成 + mock E2E | E2E 使用 deterministic seed 账号。 |
+| AI 成功生成只读版本和段落批注 | 后端集成 + mock E2E | E2E mock AI 响应，不证明外部模型。 |
+| AI disabled/unavailable 作者提示 | 后端集成 + `ai-errors.spec.js` | 页面不显示生成版本或批注成功态。 |
+| 真实外部 AI API 后端调用 | `make real-ai-smoke` | opt-in，需要 `.env` 和 `AI_REVIEW_ENABLED=true`。 |
+| 教师历史版本只读可复制 | mock E2E | 覆盖复制后退回再提交路径。 |
+| 管理员段落批注、通过、退回 | 后端集成 + mock E2E | 覆盖非管理员权限的主要后端边界。 |
+| 公开 API/UI 不泄露内部审核字段 | 后端集成 + mock E2E | 覆盖正文、元数据、标签、来源材料公开显示。 |
+| 移动端创建关键屏可读 | mock E2E | 当前只覆盖创建流三个关键屏，不是完整移动端验收。 |
+
+未充分覆盖：前端 unit/component 测试、稳定视觉 baseline、真实 AI 质量评估、移动端完整
+审核/公开链路。
+
 ## 允许缩小门禁的情况
 
 纯文档修改可只运行：
