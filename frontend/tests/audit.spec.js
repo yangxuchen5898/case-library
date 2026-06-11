@@ -148,6 +148,53 @@ test.describe("manual audit candidate flows", () => {
     expect(draft.latestReviewVersionId).not.toBe(888888);
   });
 
+  test("AI review disabled response shows a clear author-side error", async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "chromium-desktop",
+      "desktop-only AI disabled messaging regression"
+    );
+
+    await page.route("**/api/cases/*/ai-review", async (route) => {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: false,
+          status: "disabled",
+          detail: "AI 审核功能未启用",
+        }),
+      });
+    });
+
+    await page.goto("/");
+    await login(page, ADMIN);
+    await cleanupAuditCases(page, "AI禁用提示案例 ");
+    await logout(page);
+
+    await login(page, USER);
+    await page.getByRole("link", { name: "创建案例" }).click();
+    await page.getByLabel(/案例标题/).fill(`AI禁用提示案例 ${Date.now()}`);
+    await page.getByLabel(/所属部门\/学院/).fill("马克思主义学院");
+    await page.getByRole("button", { name: "继续" }).click();
+
+    await page.locator("#ccf-content").fill("本案例用于验证 AI 禁用时前端提示清晰，不误导作者。");
+    await page.locator("#ccf-source").fill("来源材料：AI 禁用提示测试。");
+    await page.getByRole("button", { name: "继续" }).click();
+
+    await page.locator("#ccf-type").selectOption("TYPE_A");
+    await page.locator("#ccf-theme").selectOption("铸魂育人");
+    await page.getByRole("button", { name: "继续" }).click();
+
+    await expect(page.getByRole("heading", { name: "提交前自查" })).toBeVisible();
+    await page.getByRole("button", { name: "生成只读审核版本" }).click();
+    await expect(page.getByText("AI 审核功能未启用")).toBeVisible();
+    await expect(page.getByText(/已生成 v\d+ 只读审核版本/)).toHaveCount(0);
+    await expect(page.getByText("AI 批注")).toHaveCount(0);
+    await capture(page, testInfo, "create-step-4-ai-disabled");
+  });
+
   test("author submit -> admin approve -> public search, with audit screenshots", async ({
     page,
   }, testInfo) => {

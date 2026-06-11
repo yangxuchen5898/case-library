@@ -50,6 +50,22 @@ Playwright 截图、trace、video 和 `.last-run.json` 写入
 `frontend/test-results/playwright/`，该目录已忽略，不提交。`agent-runs/` 仅用于
 worker/agent prompt、rmux capture 和一次性报告，不作为测试产物目录。
 
+当前 E2E 中 AI 审核成功路径使用 Playwright route mock，验证的是前端只读版本、
+段落批注和提交流程，不证明外部模型 API 已被真实调用。AI disabled 场景有前端提示
+回归测试，验证后端返回 `disabled` 时页面不崩溃且展示明确错误。
+
+真实 AI 外呼 smoke 是显式 opt-in，不属于默认门禁。仅在 `.env` 中配置真实
+`AI_BASE_URL`、`AI_API_KEY`、`AI_MODELS`、`AI_DEFAULT_MODEL` 且显式启用
+`AI_REVIEW_ENABLED=true` 时运行：
+
+```bash
+docker compose run --rm -e AI_REVIEW_ENABLED=true app make real-ai-smoke
+```
+
+该命令通过后端 `/api/cases/{case_id}/ai-review` 触发外部 OpenAI-compatible
+provider，不打印 key、base URL 或完整 prompt。无 key 或 disabled 时应验证
+disabled/unconfigured 提示，而不是声称真实 AI 已通过。
+
 ## 允许缩小门禁的情况
 
 纯文档修改可只运行：
