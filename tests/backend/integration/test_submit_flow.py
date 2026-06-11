@@ -9,7 +9,7 @@ from uuid import uuid4
 
 os.environ["MONGODB_DB_NAME"] = f"case_library_submit_flow_test_{uuid4().hex}"
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "backend"))
 
 import main
 from database import create_case, create_user, get_db, get_mongo_client

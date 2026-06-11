@@ -36,7 +36,7 @@ AI 约束见 `docs/ai.md`。
 - 演示数据脚本：`backend/demo.py`
 - 迁移工具：`backend/migrate_sqlite_to_mongo.py`、`backend/migrate_timestamps.py`
 - 本地 smoke/debug：`backend/smoke_test_mongo.py`
-- 集成检查：`backend/test_submit_flow.py`，由 `make check` 调用
+- 集成检查：`tests/backend/integration/test_submit_flow.py`，由 `make check` 调用
 - Alpha/E2E seed：`scripts/seed_e2e_accounts.py`，由默认 Compose 和
   `docker-compose.dev.yml` 启动时调用
 

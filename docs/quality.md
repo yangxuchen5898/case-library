@@ -18,7 +18,7 @@ git diff --check
 `make check` 当前包含：
 
 - `ruff check backend`
-- 后端提交流测试或 `pytest`
+- 后端提交流集成测试 `tests/backend/integration/test_submit_flow.py`
 - 前端依赖安装和 `npm run build`
 
 ## E2E

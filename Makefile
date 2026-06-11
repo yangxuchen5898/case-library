@@ -13,10 +13,10 @@ format:
 check: lint test frontend-build
 
 test:
-	@if find tests -type f -name 'test_*.py' 2>/dev/null | grep -q .; then \
+	@if [ -f tests/backend/integration/test_submit_flow.py ]; then \
+		python tests/backend/integration/test_submit_flow.py; \
+	elif find tests -type f -name 'test_*.py' 2>/dev/null | grep -q .; then \
 		pytest; \
-	elif [ -f backend/test_submit_flow.py ]; then \
-		python backend/test_submit_flow.py; \
 	else \
 		echo "No tests or smoke test found."; \
 	fi
