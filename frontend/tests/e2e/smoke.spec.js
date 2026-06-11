@@ -4,7 +4,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = join(__dirname, "..", "..");
+const REPO_ROOT = join(__dirname, "..", "..", "..");
 
 const TEST_USER = "smoke_user";
 const TEST_USER_PASS = "SmokePass123!";
