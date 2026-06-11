@@ -6,7 +6,7 @@ export default {
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: "list",
-  outputDir: "../agent-runs/screenshots",
+  outputDir: "test-results/playwright",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:18080",
     trace: "on-first-retry",

@@ -12,8 +12,11 @@ and source-of-truth policy.
   references.
 - Do not copy old files wholesale. Extract behavior or structure, then implement
   deliberately in the current codebase.
-- Keep local agent prompts, worker captures, screenshots, and reports under
-  ignored `agent-runs/` or local tooling directories.
+- Keep local agent prompts, worker captures, and worker reports under ignored
+  `agent-runs/` or local tooling directories.
+- Keep automated test screenshots, traces, videos, and reports under ignored
+  test artifact directories such as `frontend/test-results/` or
+  `frontend/playwright-report/`, not under `agent-runs/`.
 
 ## Secrets And Data
 

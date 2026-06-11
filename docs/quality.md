@@ -46,6 +46,9 @@ docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 - `chromium-mobile`：创建案例基本信息、案例内容、分类选择三个关键屏的可读性和截图。
 
 当前矩阵中移动端只跑移动专属可读性测试；桌面专属验收流在移动项目中显式 skip。
+Playwright 截图、trace、video 和 `.last-run.json` 写入
+`frontend/test-results/playwright/`，该目录已忽略，不提交。`agent-runs/` 仅用于
+worker/agent prompt、rmux capture 和一次性报告，不作为测试产物目录。
 
 ## 允许缩小门禁的情况
 
