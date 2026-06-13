@@ -1059,6 +1059,17 @@ onMounted(async () => {
   const user = currentUser();
   form.author = user?.nickname || user?.username || "";
   loadDraft();
+
+  // 修复 #92：默认"创建案例"入口应启动全新流程，不能复用 localStorage 里的旧 caseId。
+  // 只有显式通过 ?draft=xxx 进入时才保留已恢复的旧 caseId。
+  const hash = window.location.hash.replace("#", "");
+  const query = hash.includes("?") ? hash.split("?")[1] : "";
+  const draftId = new URLSearchParams(query).get("draft");
+  if (!draftId) {
+    caseId.value = null;
+    latestReviewVersionId.value = null;
+  }
+
   try {
     const data = await fetchCaseConstants();
     if (data) {

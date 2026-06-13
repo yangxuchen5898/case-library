@@ -108,6 +108,13 @@ test.describe("manual audit candidate flows", () => {
     await expect(page.getByLabel("作者姓名")).not.toHaveValue("过期作者");
     await expect(page.getByLabel(/案例标题/)).toHaveValue("旧草稿标题");
 
+    // #92：进入创建案例入口后，旧 draft 的 caseId 不应被复用。
+    const draftAfterEntry = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("case_library_create_case_draft"))
+    );
+    expect(draftAfterEntry.caseId).not.toBe(999999);
+    expect(draftAfterEntry.latestReviewVersionId).not.toBe(888888);
+
     await page.getByRole("button", { name: "保存草稿" }).click();
     await expect(page.getByText("草稿已保存")).toBeVisible();
     const draft = await page.evaluate(() =>
