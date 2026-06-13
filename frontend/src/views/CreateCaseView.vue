@@ -19,7 +19,10 @@
           ]"
         >
           <span class="mobile-step-dot" aria-hidden="true">
-            <span v-if="idx >= currentStep">{{ idx + 1 }}</span>
+            <svg v-if="idx < currentStep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <template v-else>{{ idx + 1 }}</template>
           </span>
           <span class="mobile-step-label">{{ step.label }}</span>
         </div>
@@ -29,61 +32,52 @@
     <!-- Desktop progress rail -->
     <aside class="wizard-rail">
       <div class="rail-header">
-        <div class="rail-header-top">
-          <div class="rail-title">进度</div>
-          <div class="rail-percent">{{ progressPercent }}% 完成</div>
-        </div>
-        <div class="rail-progress-track">
-          <div class="rail-progress-bar" :style="{ width: progressPercent + '%' }"></div>
+        <div class="progress-header">进度</div>
+        <div class="progress-text">{{ progressPercent }}% 完成</div>
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
       </div>
-      <nav class="rail-steps" aria-label="创建步骤">
+      <nav class="step-list" aria-label="创建步骤">
         <div
           v-for="(step, idx) in steps"
           :key="step.id"
           :class="[
-            'rail-step',
-            { active: idx === currentStep, completed: idx < currentStep, future: idx > currentStep },
+            'step-item',
+            { current: idx === currentStep, done: idx < currentStep, todo: idx > currentStep },
           ]"
         >
-          <div class="rail-step-left">
-            <div class="step-icon" aria-hidden="true">
-              <svg v-if="step.id === 'basic'" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8" fill="none" stroke="currentColor" stroke-width="2"></polyline>
-              </svg>
-              <svg v-else-if="step.id === 'content'" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path fill="currentColor" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-              </svg>
-              <svg v-else-if="step.id === 'classify'" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M12 2l-9 4.5v6L3 13l9 4.5L21 13l-0-0.5v-6L12 2z"></path>
-                <path fill="currentColor" d="M12 22l-9-4.5v-3l9 4.5 9-4.5v3L12 22z"></path>
-              </svg>
-              <svg v-else-if="step.id === 'review'" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
-                <path fill="none" stroke="#fff" stroke-width="2" d="M9 12l2 2 4-4"></path>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01" fill="none" stroke="currentColor" stroke-width="2"></polyline>
-              </svg>
-            </div>
-            <div class="step-marker" aria-hidden="true">
-              <span v-if="idx >= currentStep">{{ idx + 1 }}</span>
+          <div class="step-icon" aria-hidden="true">
+            <svg v-if="idx < currentStep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <svg v-else-if="idx === currentStep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <template v-else>{{ idx + 1 }}</template>
+          </div>
+          <div class="step-info">
+            <div class="step-title">{{ step.label }}</div>
+            <div class="step-desc">
+              <template v-if="step.id === 'basic'">填写标题与作者</template>
+              <template v-else-if="step.id === 'content'">撰写案例正文</template>
+              <template v-else-if="step.id === 'classify'">选择案例分类</template>
+              <template v-else-if="step.id === 'review'">智能内容审核</template>
+              <template v-else>确认并提交</template>
             </div>
           </div>
-          <div class="step-label">{{ step.label }}</div>
         </div>
       </nav>
     </aside>
 
     <main class="wizard-main">
-      <div class="wizard-breadcrumb">
-        <span class="bc-parent">创建案例</span>
-        <span class="bc-chevron" aria-hidden="true">›</span>
-        <span class="bc-current">{{ steps[currentStep].label }}</span>
-      </div>
+      <nav class="wizard-breadcrumb">
+        <a href="#library">案例库</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-static">创建新案例</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">{{ steps[currentStep].label }}</span>
+      </nav>
 
       <h1 class="wizard-title">{{ stepMeta.title }}</h1>
       <p class="wizard-desc">{{ stepMeta.desc }}</p>
@@ -98,41 +92,44 @@
       <div v-else class="wizard-form">
         <!-- Step 1: 基本信息 -->
         <template v-if="currentStep === 0">
-          <div class="field">
-            <label for="ccf-title">案例标题 <span class="required" aria-hidden="true">*</span></label>
+          <div class="form-section">
+            <label class="form-label" for="ccf-title">案例标题 <span class="required" aria-hidden="true">*</span></label>
             <input
               id="ccf-title"
               v-model="form.title"
               type="text"
-              placeholder="请输入案例标题"
+              class="form-input"
+              placeholder="输入具有学术性与引领性的标题"
               :aria-invalid="!!errors.title"
               @blur="touch('title')"
             />
+            <p class="form-hint">建议标题长度在 15-30 字之间，包含核心教学知识点。</p>
             <div v-if="errors.title" class="field-error" role="alert">{{ errors.title }}</div>
           </div>
 
-          <div class="row two-col">
-            <div class="field">
-              <label for="ccf-author">作者姓名</label>
+          <div class="form-row">
+            <div class="form-section">
+              <label class="form-label" for="ccf-author">作者姓名</label>
               <input
                 id="ccf-author"
                 :value="displayAuthor"
                 type="text"
+                class="form-input readonly"
                 readonly
-                class="readonly"
                 aria-describedby="ccf-author-tip"
               />
-              <div id="ccf-author-tip" class="field-help">取自当前登录账号信息</div>
+              <p id="ccf-author-tip" class="form-hint">取自当前登录账号信息</p>
             </div>
-            <div class="field">
-              <label for="ccf-department">
+            <div class="form-section">
+              <label class="form-label" for="ccf-department">
                 所属部门/学院 <span class="required" aria-hidden="true">*</span>
               </label>
               <input
                 id="ccf-department"
                 v-model="form.department"
                 type="text"
-                placeholder="请输入所属部门或学院"
+                class="form-input"
+                placeholder="例如：马克思主义学院"
                 :aria-invalid="!!errors.department"
                 @blur="touch('department')"
               />
@@ -141,46 +138,84 @@
           </div>
 
           <div class="tip-card">
-            <div class="tip-icon" aria-hidden="true"></div>
-            <div class="tip-body">
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            <div>
               <div class="tip-title">编写小贴士</div>
-              <ul>
-                <li>标题应简洁明了，突出案例的核心问题与教学价值。</li>
-                <li>作者姓名取自登录账号，如需修改请联系管理员。</li>
-                <li>部门/学院信息将用于案例归属、统计与检索。</li>
-              </ul>
+              <div class="tip-text">
+                优秀的思政案例应当将价值引领与知识传授有机融合。在"基本信息"阶段，请确保所有参与作者的姓名拼写正确，并使用官方的全称来标注所属学院。
+              </div>
             </div>
           </div>
         </template>
 
         <!-- Step 2: 案例内容 -->
         <template v-if="currentStep === 1">
-          <div class="field">
-            <label for="ccf-content">案例正文 <span class="required" aria-hidden="true">*</span></label>
-            <textarea
-              id="ccf-content"
-              v-model="form.content"
-              rows="14"
-              placeholder="请使用 Markdown 格式编写案例正文，建议包含背景、问题、分析、反思等部分。"
-              :aria-invalid="!!errors.content"
-              @blur="touch('content')"
-            ></textarea>
+          <div class="form-section">
+            <label class="form-label" for="ccf-content">案例正文 <span class="required" aria-hidden="true">*</span></label>
+            <div class="editor-wrapper">
+              <div class="editor-toolbar">
+                <button type="button" class="toolbar-btn" title="加粗" aria-label="加粗">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>
+                </button>
+                <button type="button" class="toolbar-btn" title="斜体" aria-label="斜体">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+                </button>
+                <button type="button" class="toolbar-btn" title="下划线" aria-label="下划线">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+                </button>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" title="无序列表" aria-label="无序列表">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button type="button" class="toolbar-btn" title="有序列表" aria-label="有序列表">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+                </button>
+              </div>
+              <textarea
+                id="ccf-content"
+                v-model="form.content"
+                class="editor-textarea"
+                rows="14"
+                placeholder="请使用 Markdown 格式编写案例正文，建议包含背景、问题、分析、反思等部分。"
+                :aria-invalid="!!errors.content"
+                @blur="touch('content')"
+              ></textarea>
+            </div>
             <div class="textarea-meta">
-              <span>字数 {{ wordCount }}</span>
-              <span>预计阅读 {{ readingTime }} 分钟</span>
+              <span>当前字数：{{ wordCount }}</span>
+              <span>预计阅读时间：{{ readingTime }} 分钟</span>
             </div>
             <div v-if="errors.content" class="field-error" role="alert">{{ errors.content }}</div>
           </div>
 
-          <div class="field">
-            <label for="ccf-source">来源材料</label>
+          <div class="form-section">
+            <label class="form-label" for="ccf-source">来源材料</label>
             <textarea
               id="ccf-source"
               v-model="form.source_material"
+              class="form-input"
               rows="8"
               placeholder="可粘贴新闻链接、公众号正文、活动记录、访谈纪要或其他支撑材料。"
             ></textarea>
-            <div class="field-help">来源材料会随版本快照保存，公开案例仅展示正文和来源材料，不展示审核批注。</div>
+            <p class="form-hint">来源材料会随版本快照保存，公开案例仅展示正文和来源材料，不展示审核批注。</p>
+          </div>
+
+          <div class="tip-card">
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            <div>
+              <div class="tip-title">写作小贴士</div>
+              <div class="tip-text">
+                优秀的思政案例应当叙事生动、逻辑清晰、价值导向明确。建议在撰写过程中注重真实性与典型性，善用具体数据和场景描写增强说服力。案例字数建议控制在 2000–5000 字之间。
+              </div>
+            </div>
           </div>
         </template>
 
@@ -191,35 +226,55 @@
             <span>不确定分类？可点击右下角 AI 助手，根据已填写内容获取一次本地建议。</span>
           </div>
 
-          <div class="field">
-            <label for="ccf-type">案例类型 <span class="required" aria-hidden="true">*</span></label>
-            <select
-              id="ccf-type"
-              v-model="form.type"
-              :aria-invalid="!!errors.type"
-              @change="touch('type')"
-            >
-              <option disabled value="">请选择案例类型</option>
-              <option v-for="(label, key) in constants.case_types" :key="key" :value="key">
-                {{ label }}
-              </option>
-            </select>
-            <div class="field-help">类型决定案例在库中的展示分类与主要使用场景。</div>
+          <div class="tag-section">
+            <div class="tag-section-title">
+              案例类型 <span class="required">*</span>
+            </div>
+            <div class="tag-grid">
+              <div
+                v-for="(label, key) in constants.case_types"
+                :key="key"
+                :class="['tag-chip', { selected: form.type === key }]"
+                @click="form.type = form.type === key ? '' : key; touch('type')"
+                role="button"
+                tabindex="0"
+                :aria-pressed="form.type === key"
+              >
+                <div class="tag-checkbox">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <span class="tag-label">{{ label }}</span>
+              </div>
+            </div>
+            <p class="form-hint">类型决定案例在库中的展示分类与主要使用场景。</p>
             <div v-if="errors.type" class="field-error" role="alert">{{ errors.type }}</div>
           </div>
 
-          <div class="field">
-            <label for="ccf-theme">案例主题 <span class="required" aria-hidden="true">*</span></label>
-            <select
-              id="ccf-theme"
-              v-model="form.theme"
-              :aria-invalid="!!errors.theme"
-              @change="touch('theme')"
-            >
-              <option disabled value="">请选择案例主题</option>
-              <option v-for="t in constants.themes" :key="t" :value="t">{{ t }}</option>
-            </select>
-            <div class="field-help">主题用于跨类型的关键词聚合与检索。</div>
+          <div class="tag-section">
+            <div class="tag-section-title">
+              案例主题 <span class="required">*</span>
+            </div>
+            <div class="tag-grid">
+              <div
+                v-for="t in constants.themes"
+                :key="t"
+                :class="['tag-chip', { selected: form.theme === t }]"
+                @click="form.theme = form.theme === t ? '' : t; touch('theme')"
+                role="button"
+                tabindex="0"
+                :aria-pressed="form.theme === t"
+              >
+                <div class="tag-checkbox">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <span class="tag-label">{{ t }}</span>
+              </div>
+            </div>
+            <p class="form-hint">主题用于跨类型的关键词聚合与检索。</p>
             <div v-if="errors.theme" class="field-error" role="alert">{{ errors.theme }}</div>
           </div>
 
@@ -230,7 +285,7 @@
               <button type="button" class="helper-close-btn" aria-label="关闭" @click="showHelper = false">×</button>
             </div>
             <div class="helper-body">
-              <p class="helper-desc">请输入您想咨询的问题，例如：“帮我推荐案例类型和主题”。</p>
+              <p class="helper-desc">请输入您想咨询的问题，例如："帮我推荐案例类型和主题"。</p>
               <input
                 v-model="helperInput"
                 type="text"
@@ -259,200 +314,265 @@
 
         <!-- Step 4: AI 审核 -->
         <template v-if="currentStep === 3">
-          <div class="review-header">
-            <span class="review-badge">AI 自查</span>
-            <span class="review-percent">{{ aiReviewProgress }}% 已完成</span>
-          </div>
-          <div class="review-progress-track">
-            <div class="review-progress-bar" :style="{ width: aiReviewProgress + '%' }"></div>
-          </div>
-          <p class="review-note">
-            以下结果来自后端 AI 自查接口，仅作为作者提交前参考，不代表专家审核结论。
-          </p>
+          <div class="review-panel">
+            <div class="review-panel-header">
+              <div class="review-panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="review-panel-title-wrap">
+                <div class="review-panel-title">AI 自查</div>
+                <div class="review-panel-subtitle">生成只读审核版本，并按段落给出作者侧修改建议</div>
+              </div>
+            </div>
+            <div class="review-panel-body">
+              <div class="review-header">
+                <span class="review-badge">AI 自查</span>
+                <span class="review-percent">{{ aiReviewProgress }}% 已完成</span>
+              </div>
+              <div class="review-progress-track">
+                <div class="review-progress-bar" :style="{ width: aiReviewProgress + '%' }"></div>
+              </div>
+              <p class="review-note">
+                以下结果来自后端 AI 自查接口，仅作为作者提交前参考，不代表专家审核结论。
+              </p>
 
-          <div v-if="aiPromptLoadError" class="ai-unavailable-banner" role="status">
-            {{ aiPromptLoadError }}
-          </div>
+              <div v-if="aiPromptLoadError" class="ai-unavailable-banner" role="status">
+                {{ aiPromptLoadError }}
+              </div>
 
-          <div class="ai-review-toolbar">
-            <button
-              type="button"
-              class="btn-primary"
-              :disabled="aiRunningAll || !canRunAiReview"
-              @click="runAllAiReviews"
-            >
-              {{ aiRunningAll ? '生成中…' : '生成只读审核版本' }}
-            </button>
-            <span class="ai-toolbar-note">
-              需要先填写标题、正文、类型和主题。AI 会生成段落级批注版本，不会给出审批结论。
-            </span>
-          </div>
-
-          <div class="review-grid">
-            <div v-for="item in aiReviewItems" :key="item.id" class="review-card ai-review-card">
-              <div class="review-card-top">
-                <div>
-                  <div class="review-card-title">{{ item.name }}</div>
-                  <div class="review-card-desc">{{ item.description }}</div>
-                </div>
-                <span class="ai-status-pill" :class="aiReviewState[item.id].status">
-                  {{ aiStatusLabel(aiReviewState[item.id].status) }}
+              <div class="ai-review-toolbar">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="aiRunningAll || !canRunAiReview"
+                  @click="runAllAiReviews"
+                >
+                  {{ aiRunningAll ? '生成中…' : '生成只读审核版本' }}
+                </button>
+                <span class="ai-toolbar-note">
+                  需要先填写标题、正文、类型和主题。AI 会生成段落级批注版本，不会给出审批结论。
                 </span>
               </div>
 
-              <div v-if="aiReviewState[item.id].status === 'idle'" class="ai-placeholder">
-                尚未运行。点击下方按钮获取作者侧自查建议。
-              </div>
-
-              <div v-else-if="aiReviewState[item.id].status === 'loading'" class="ai-placeholder">
-                正在请求后端 AI 自查…
-              </div>
-
-              <div v-else-if="aiReviewState[item.id].status === 'error'" class="ai-error">
-                {{ aiReviewState[item.id].error }}
-              </div>
-
-              <div v-else class="ai-result">
-                <div v-if="aiReviewState[item.id].parsed" class="ai-result-body">
-                  <div v-if="aiReviewState[item.id].parsed.detail" class="ai-detail">
-                    {{ aiReviewState[item.id].parsed.detail }}
-                  </div>
-                  <div v-if="aiReviewState[item.id].parsed.score != null" class="ai-score">
-                    评分 {{ aiReviewState[item.id].parsed.score }}
-                  </div>
-                  <ul
-                    v-if="Array.isArray(aiReviewState[item.id].parsed.suggestions) && aiReviewState[item.id].parsed.suggestions.length"
-                    class="ai-suggestions"
-                  >
-                    <li v-for="suggestion in aiReviewState[item.id].parsed.suggestions" :key="suggestion">
-                      {{ suggestion }}
-                    </li>
-                  </ul>
-                  <ul
-                    v-if="Array.isArray(aiReviewState[item.id].comments) && aiReviewState[item.id].comments.length && !hasAnnotationPreview(aiReviewState[item.id])"
-                    class="ai-suggestions"
-                  >
-                    <li v-for="comment in aiReviewState[item.id].comments" :key="comment.id || comment.message">
-                      {{ comment.paragraph_id }}：{{ comment.message }}
-                    </li>
-                  </ul>
-                  <div
-                    v-if="hasAnnotationPreview(aiReviewState[item.id])"
-                    class="ai-annotation-preview"
-                  >
-                    <div class="annotation-copy">
-                      <strong>版本正文</strong>
-                      <p
-                        v-for="paragraph in aiReviewState[item.id].version.paragraphs"
-                        :key="paragraph.paragraph_id"
-                        :class="{ highlighted: commentsForParagraph(aiReviewState[item.id], paragraph.paragraph_id).length }"
-                      >
-                        <span>{{ paragraph.paragraph_id }}</span>
-                        {{ paragraph.text }}
-                      </p>
+              <div class="review-grid">
+                <div v-for="item in aiReviewItems" :key="item.id" class="review-card ai-review-card">
+                  <div class="review-card-top">
+                    <div>
+                      <div class="review-card-title">{{ item.name }}</div>
+                      <div class="review-card-desc">{{ item.description }}</div>
                     </div>
-                    <aside class="annotation-comments" aria-label="AI 段落批注">
-                      <strong>AI 批注</strong>
-                      <div
-                        v-for="comment in aiReviewState[item.id].comments"
-                        :key="comment.id || `${comment.paragraph_id}-${comment.message}`"
-                        class="annotation-comment"
-                      >
-                        <strong>{{ comment.paragraph_id }}</strong>
-                        <p>{{ comment.message }}</p>
-                        <small v-if="comment.suggestion">{{ comment.suggestion }}</small>
-                      </div>
-                    </aside>
+                    <span class="ai-status-pill" :class="aiReviewState[item.id].status">
+                      {{ aiStatusLabel(aiReviewState[item.id].status) }}
+                    </span>
                   </div>
-                </div>
-                <pre v-else class="ai-answer">{{ aiReviewState[item.id].answer }}</pre>
-                <div v-if="aiReviewState[item.id].parse_error" class="ai-parse-warning">
-                  {{ aiReviewState[item.id].parse_error }}
+
+                  <div v-if="aiReviewState[item.id].status === 'idle'" class="ai-placeholder">
+                    尚未运行。点击下方按钮获取作者侧自查建议。
+                  </div>
+
+                  <div v-else-if="aiReviewState[item.id].status === 'loading'" class="ai-placeholder">
+                    正在请求后端 AI 自查…
+                  </div>
+
+                  <div v-else-if="aiReviewState[item.id].status === 'error'" class="ai-error">
+                    {{ aiReviewState[item.id].error }}
+                  </div>
+
+                  <div v-else class="ai-result">
+                    <div v-if="aiReviewState[item.id].parsed" class="ai-result-body">
+                      <div v-if="aiReviewState[item.id].parsed.detail" class="ai-detail">
+                        {{ aiReviewState[item.id].parsed.detail }}
+                      </div>
+                      <div v-if="aiReviewState[item.id].parsed.score != null" class="ai-score">
+                        评分 {{ aiReviewState[item.id].parsed.score }}
+                      </div>
+                      <ul
+                        v-if="Array.isArray(aiReviewState[item.id].parsed.suggestions) && aiReviewState[item.id].parsed.suggestions.length"
+                        class="ai-suggestions"
+                      >
+                        <li v-for="suggestion in aiReviewState[item.id].parsed.suggestions" :key="suggestion">
+                          {{ suggestion }}
+                        </li>
+                      </ul>
+                      <ul
+                        v-if="Array.isArray(aiReviewState[item.id].comments) && aiReviewState[item.id].comments.length && !hasAnnotationPreview(aiReviewState[item.id])"
+                        class="ai-suggestions"
+                      >
+                        <li v-for="comment in aiReviewState[item.id].comments" :key="comment.id || comment.message">
+                          {{ comment.paragraph_id }}：{{ comment.message }}
+                        </li>
+                      </ul>
+                      <div
+                        v-if="hasAnnotationPreview(aiReviewState[item.id])"
+                        class="ai-annotation-preview"
+                      >
+                        <div class="annotation-copy">
+                          <strong>版本正文</strong>
+                          <p
+                            v-for="paragraph in aiReviewState[item.id].version.paragraphs"
+                            :key="paragraph.paragraph_id"
+                            :class="{ highlighted: commentsForParagraph(aiReviewState[item.id], paragraph.paragraph_id).length }"
+                          >
+                            <span>{{ paragraph.paragraph_id }}</span>
+                            {{ paragraph.text }}
+                          </p>
+                        </div>
+                        <aside class="annotation-comments" aria-label="AI 段落批注">
+                          <strong>AI 批注</strong>
+                          <div
+                            v-for="comment in aiReviewState[item.id].comments"
+                            :key="comment.id || `${comment.paragraph_id}-${comment.message}`"
+                            class="annotation-comment"
+                          >
+                            <strong>{{ comment.paragraph_id }}</strong>
+                            <p>{{ comment.message }}</p>
+                            <small v-if="comment.suggestion">{{ comment.suggestion }}</small>
+                          </div>
+                        </aside>
+                      </div>
+                    </div>
+                    <pre v-else class="ai-answer">{{ aiReviewState[item.id].answer }}</pre>
+                    <div v-if="aiReviewState[item.id].parse_error" class="ai-parse-warning">
+                      {{ aiReviewState[item.id].parse_error }}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn-secondary ai-run-btn"
+                    :disabled="aiReviewState[item.id].status === 'loading' || !canRunAiReview"
+                    @click="runAiReview(item.id)"
+                  >
+                    {{ aiReviewState[item.id].status === 'loading' ? '运行中…' : '运行此项' }}
+                  </button>
                 </div>
               </div>
-
-              <button
-                type="button"
-                class="btn-secondary ai-run-btn"
-                :disabled="aiReviewState[item.id].status === 'loading' || !canRunAiReview"
-                @click="runAiReview(item.id)"
-              >
-                {{ aiReviewState[item.id].status === 'loading' ? '运行中…' : '运行此项' }}
-              </button>
             </div>
           </div>
         </template>
 
         <!-- Step 5: 提交确认 -->
         <template v-if="currentStep === 4">
-          <div class="pass-notice">
-            <span class="pass-icon" aria-hidden="true"></span>
-            <span>提交后案例将进入专家人工审核流程，请耐心等待。</span>
+          <div class="summary-card">
+            <div class="summary-header">
+              <div class="summary-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <div>
+                <div class="summary-title">案例信息汇总</div>
+                <div class="summary-subtitle">提交前请再次确认以下内容</div>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-label">案例标题</div>
+              <div class="field-value">{{ form.title || '—（请填写）' }}</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">作者姓名</div>
+              <div class="field-value">{{ displayAuthor || '—' }}</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">所属学院</div>
+              <div class="field-value">{{ form.department || '—' }}</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">案例类型</div>
+              <div class="field-value">
+                <span v-if="form.type" class="field-tag">{{ constants.case_types[form.type] }}</span>
+                <template v-else>—</template>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">案例主题</div>
+              <div class="field-value">
+                <span v-if="form.theme" class="field-tag">{{ form.theme }}</span>
+                <template v-else>—</template>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">案例正文</div>
+              <div class="field-value">{{ contentSummary }}</div>
+            </div>
           </div>
 
-          <div class="submit-card">
-            <div class="submit-card-header">
-              <h3>提交至专家审核</h3>
-              <span class="status-pill">待审核</span>
-            </div>
-            <ul class="submit-checklist">
-              <li :class="{ ok: form.title }">
-                <span class="check" aria-hidden="true"></span>
-                案例标题：{{ form.title || '未填写' }}
-              </li>
-              <li :class="{ ok: form.department }">
-                <span class="check" aria-hidden="true"></span>
-                所属部门/学院：{{ form.department || '未填写' }}
-              </li>
-              <li :class="{ ok: form.content }">
-                <span class="check" aria-hidden="true"></span>
-                案例正文：{{ contentSummary }}
-              </li>
-              <li :class="{ ok: form.type }">
-                <span class="check" aria-hidden="true"></span>
-                案例类型：{{ form.type ? constants.case_types[form.type] : '未选择' }}
-              </li>
-              <li :class="{ ok: form.theme }">
-                <span class="check" aria-hidden="true"></span>
-                案例主题：{{ form.theme || '未选择' }}
-              </li>
-            </ul>
-            <button
-              type="button"
-              class="btn-submit-final"
-              :disabled="submitting || !canSubmit"
-              @click="handleFormalSubmit"
-            >
-              <span>{{ submitting ? '提交中…' : '正式提交案例' }}</span>
-              <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path>
+          <div class="confirm-box">
+            <div class="confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
-            </button>
+            </div>
+            <div class="confirm-title">准备提交</div>
+            <div class="confirm-text">
+              提交后案例将进入专家人工审核流程，请耐心等待。
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            <div>
+              <div class="tip-title">提交后须知</div>
+              <div class="tip-text">
+                案例提交后不可修改，如需调整请在审核结果出具前撤回并重新编辑。审核期间您可以在"我的提交"中查看当前进度。
+              </div>
+            </div>
           </div>
         </template>
 
         <!-- Bottom actions -->
         <div class="wizard-actions">
-          <template v-if="currentStep > 0 && currentStep < 4">
-            <button type="button" class="btn-secondary" @click="prevStep">上一步</button>
-          </template>
-          <template v-if="currentStep < 4">
-            <button type="button" class="btn-secondary" :disabled="saving" @click="handleSaveDraft">
-              {{ saving ? '保存中…' : '保存草稿' }}
-            </button>
-            <button type="button" class="btn-primary" @click="nextStep">
-              继续 <span class="arrow" aria-hidden="true">→</span>
-            </button>
-          </template>
-          <template v-if="currentStep === 4">
-            <button type="button" class="btn-secondary" @click="currentStep = 1">返回修改</button>
-          </template>
+          <div class="wizard-actions-left">
+            <template v-if="currentStep > 0 && currentStep < 4">
+              <button type="button" class="btn-secondary" @click="prevStep">上一步</button>
+            </template>
+            <template v-if="currentStep < 4">
+              <button type="button" class="btn-secondary" :disabled="saving" @click="handleSaveDraft">
+                {{ saving ? '保存中…' : '保存草稿' }}
+              </button>
+            </template>
+            <template v-if="currentStep === 4">
+              <button type="button" class="btn-secondary" @click="currentStep = 1">返回修改</button>
+            </template>
+          </div>
+          <div class="wizard-actions-right">
+            <template v-if="currentStep < 4">
+              <button type="button" class="btn-primary" @click="nextStep">
+                继续 <span class="arrow" aria-hidden="true">→</span>
+              </button>
+            </template>
+            <template v-if="currentStep === 4">
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="submitting || !canSubmit"
+                @click="handleFormalSubmit"
+              >
+                <span>{{ submitting ? '提交中…' : '确认提交' }}</span>
+                <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path>
+                </svg>
+              </button>
+            </template>
+          </div>
         </div>
       </div>
     </main>
   </div>
 </template>
-
 <script setup>
 import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
 import { currentUser, isLoggedIn } from "../api/auth.js";
@@ -1107,160 +1227,173 @@ watch(currentStep, () => {
   });
 });
 </script>
-
 <style scoped>
 .create-case-wizard {
+  /* Design tokens */
+  --accent: #c41e3a;
+  --accent-soft: #fef2f2;
+  --accent-dark: #a01830;
+  --success: #22c55e;
+  --fg: #1a1a1a;
+  --muted: #666666;
+  --border: #e5e5e5;
+  --gray-bg: #f5f5f5;
+  --gray-bg-dark: #f0f0f0;
+  --gray-border: #e5e5e5;
+  --gray-text: #bbb;
+  --gray-text-light: #ccc;
+  --gray-hint: #999;
+  --gray-input: #f9f9f9;
+  --font-display: 'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', 'Iowan Old Style', 'Charter', Georgia, serif;
+
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--header-height));
-  background: var(--color-bg);
+  background: #ffffff;
 }
 
 /* Desktop rail */
 .wizard-rail {
   display: none;
-  width: 280px;
+  width: 260px;
   flex-shrink: 0;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
 }
 
 .rail-header {
-  padding: 24px;
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
 }
 
-.rail-header-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.rail-title {
-  font-size: 14px;
+.progress-header {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--fg);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
-.rail-percent {
-  font-size: 20px;
-  font-weight: 700;
-  color: #16a34a;
-}
-
-.rail-progress-track {
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
+.progress-bar {
+  height: 4px;
+  background: var(--gray-bg-dark);
+  border-radius: 2px;
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
-.rail-progress-bar {
+.progress-fill {
   height: 100%;
-  background: #16a34a;
-  border-radius: 3px;
+  background: var(--accent);
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
-.rail-steps {
-  padding: 8px 0 24px;
+.progress-text {
+  font-size: 11px;
+  color: var(--muted);
 }
 
-.rail-step {
+.step-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 12px;
+  border-radius: 8px;
   position: relative;
-  color: var(--color-text-secondary);
+  transition: background 0.15s ease;
 }
 
-.rail-step.active {
-  background: var(--color-brand-light);
-  color: var(--color-brand);
+.step-item.current {
+  background: var(--accent-soft);
 }
 
-.rail-step.active::before {
-  content: "";
+.step-item.current::before {
+  content: '';
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--color-brand);
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  background: var(--accent);
   border-radius: 0 2px 2px 0;
 }
 
-.rail-step.completed {
-  color: var(--color-text);
-}
-
-.rail-step.future {
-  color: var(--color-text-muted);
-}
-
-.rail-step-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .step-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-}
-
-.step-marker {
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  font-size: 12px;
+  margin-top: 1px;
+  font-size: 11px;
   font-weight: 700;
-  border: 2px solid currentColor;
 }
 
-.rail-step.completed .step-marker {
-  position: relative;
-  background: var(--color-brand);
+.step-item.done .step-icon {
+  background: var(--accent);
   color: #fff;
-  border-color: var(--color-brand);
 }
 
-.rail-step.completed .step-marker::before {
-  content: "";
-  width: 8px;
-  height: 4px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg) translate(1px, -1px);
+.step-item.current .step-icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
 }
 
-.rail-step.future .step-marker {
-  border-color: var(--color-text-muted);
-  color: var(--color-text-muted);
+.step-item.todo .step-icon {
+  background: var(--gray-bg);
+  color: var(--gray-text);
+  border: 1.5px solid var(--gray-border);
 }
 
-.step-label {
-  font-size: 14px;
+.step-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.step-info {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 13px;
   font-weight: 500;
+  color: var(--fg);
+  line-height: 1.4;
 }
 
-.rail-step.active .step-label {
+.step-item.current .step-title {
+  color: var(--accent);
   font-weight: 600;
+}
+
+.step-item.todo .step-title {
+  color: var(--gray-text);
+}
+
+.step-desc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.step-item.todo .step-desc {
+  color: var(--gray-text-light);
 }
 
 /* Mobile rail */
 .wizard-rail-mobile {
   display: block;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
   padding: 16px;
 }
 
@@ -1274,27 +1407,27 @@ watch(currentStep, () => {
 .mobile-progress-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--fg);
 }
 
 .mobile-progress-percent {
-  font-size: 15px;
-  font-weight: 700;
-  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .mobile-progress-bar-track {
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
+  height: 4px;
+  background: var(--gray-bg-dark);
+  border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .mobile-progress-bar {
   height: 100%;
-  background: #16a34a;
-  border-radius: 3px;
+  background: var(--accent);
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
@@ -1310,46 +1443,40 @@ watch(currentStep, () => {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  color: var(--color-text-muted);
+  color: var(--gray-text);
   flex: 1;
   min-width: 0;
 }
 
 .mobile-step.active {
-  color: var(--color-brand);
+  color: var(--accent);
 }
 
 .mobile-step.completed {
-  color: var(--color-brand);
+  color: var(--accent);
 }
 
 .mobile-step-dot {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid currentColor;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1.5px solid currentColor;
+  display: grid;
+  place-items: center;
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .mobile-step.completed .mobile-step-dot {
-  position: relative;
-  background: var(--color-brand);
+  background: var(--accent);
   color: #fff;
-  border-color: var(--color-brand);
+  border-color: var(--accent);
 }
 
-.mobile-step.completed .mobile-step-dot::before {
-  content: "";
-  width: 8px;
-  height: 4px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg) translate(1px, -1px);
+.mobile-step-dot svg {
+  width: 12px;
+  height: 12px;
 }
 
 .mobile-step-label {
@@ -1366,194 +1493,322 @@ watch(currentStep, () => {
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: 24px 16px 40px;
-  max-width: 960px;
+  padding: 32px 16px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .wizard-breadcrumb {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
 }
 
-.bc-current {
-  color: var(--color-brand);
-  font-weight: 600;
+.wizard-breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
 }
 
-.bc-chevron {
-  margin: 0 6px;
+.wizard-breadcrumb a:hover {
+  color: var(--fg);
+}
+
+.breadcrumb-sep {
+  color: var(--gray-text-light);
+}
+
+.breadcrumb-current {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.breadcrumb-static {
+  color: var(--muted);
 }
 
 .wizard-title {
-  margin: 0 0 8px;
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--fg);
+  margin: 0 0 8px;
+  letter-spacing: 1px;
 }
 
 .wizard-desc {
-  margin: 0 0 24px;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0 0 32px;
 }
 
 .wizard-form {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
+  /* Content sits directly on the white background */
 }
 
-.field {
-  margin-bottom: 18px;
+.form-section {
+  margin-bottom: 28px;
 }
 
-.field label {
+.form-label {
   display: block;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--fg);
+  margin-bottom: 8px;
 }
 
-.required {
-  color: var(--color-brand);
+.form-label .required {
+  color: var(--accent);
   margin-left: 2px;
 }
 
+.form-input,
 input[type="text"],
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 4px;
-  font-family: inherit;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
   font-size: 14px;
-  color: var(--color-text);
-  background: var(--color-surface);
+  color: var(--fg);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
 }
 
+.form-input::placeholder,
+input[type="text"]::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: var(--gray-text);
+}
+
+.form-input:focus,
 input[type="text"]:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px var(--color-brand-light);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.form-input.readonly,
 input.readonly {
-  background: #f3f4f6;
-  color: var(--color-text-secondary);
+  background: var(--gray-bg);
+  color: var(--muted);
 }
 
-textarea {
-  min-height: 240px;
+.form-hint {
+  font-size: 11px;
+  color: var(--gray-hint);
+  margin-top: 6px;
+}
+
+.field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+/* Tip card */
+.tip-card {
+  display: flex;
+  gap: 12px;
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0;
+}
+
+.tip-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.tip-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* Buttons */
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.wizard-actions-left {
+  display: flex;
+  gap: 12px;
+}
+
+.wizard-actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--fg);
+  background: var(--gray-bg);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary svg,
+.btn-secondary svg {
+  width: 14px;
+  height: 14px;
+}
+
+.arrow {
+  margin-left: 2px;
+}
+
+/* Step 2 editor */
+.editor-wrapper {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--gray-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: var(--gray-bg-dark);
+  color: var(--fg);
+}
+
+.toolbar-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.editor-textarea {
+  width: 100%;
+  min-height: 320px;
+  padding: 16px;
+  border: none;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.8;
   resize: vertical;
-  line-height: 1.6;
+  outline: none;
 }
 
-#ccf-content {
-  min-height: 280px;
+.editor-textarea::placeholder {
+  color: var(--gray-text);
 }
 
 #ccf-source {
   min-height: 180px;
 }
 
-.field-help {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.field-error {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--color-error-text);
-  background: var(--color-error-bg);
-  padding: 6px 8px;
-  border-radius: 4px;
-}
-
 .textarea-meta {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 16px;
   margin-top: 6px;
   font-size: 12px;
-  color: var(--color-text-muted);
+  color: var(--gray-hint);
 }
 
-.row.two-col {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-}
-
-.tip-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: 6px;
-  background: #fafafa;
-}
-
-.tip-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--color-brand-light);
-  color: var(--color-brand);
-  position: relative;
-  flex-shrink: 0;
-}
-
-.tip-icon::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 5px;
-  width: 2px;
-  height: 12px;
-  background: currentColor;
-  border-radius: 1px;
-}
-
-.tip-icon::after {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 10px;
-  width: 12px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 1px;
-}
-
-.tip-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 6px;
-}
-
-.tip-body {
-  min-width: 0;
-}
-
-.tip-body ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-}
-
+/* Step 3 hint banner */
 .hint-banner {
   display: flex;
   align-items: center;
@@ -1598,14 +1853,98 @@ textarea {
   height: 2px;
 }
 
+/* Tag chips */
+.tag-section {
+  margin-bottom: 32px;
+}
+
+.tag-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-section-title .required {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.tag-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.tag-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tag-chip.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tag-checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-text-light);
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+
+.tag-chip.selected .tag-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.tag-checkbox svg {
+  width: 10px;
+  height: 10px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tag-chip.selected .tag-checkbox svg {
+  opacity: 1;
+}
+
+.tag-label {
+  font-size: 13px;
+  color: var(--fg);
+  line-height: 1.4;
+}
+
 /* Helper panel */
 .helper-panel {
   position: fixed;
   right: 16px;
   bottom: 80px;
   width: min(92vw, 360px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
+  background: #fff;
+  border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   z-index: 110;
@@ -1616,10 +1955,10 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
   font-size: 13px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--fg);
 }
 
 .helper-close-btn {
@@ -1627,7 +1966,7 @@ textarea {
   border: 0;
   font-size: 20px;
   line-height: 1;
-  color: var(--color-text-muted);
+  color: var(--gray-hint);
   cursor: pointer;
 }
 
@@ -1638,7 +1977,7 @@ textarea {
 .helper-desc {
   margin: 0 0 10px;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .helper-body input[type="text"] {
@@ -1648,9 +1987,9 @@ textarea {
 .btn-helper {
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--color-brand);
+  border: 1px solid var(--accent);
   border-radius: 6px;
-  background: var(--color-brand);
+  background: var(--accent);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -1665,10 +2004,10 @@ textarea {
 .helper-response {
   margin-top: 10px;
   padding: 10px;
-  background: #f6f7f9;
+  background: var(--gray-bg);
   border-radius: 6px;
   font-size: 13px;
-  color: var(--color-text);
+  color: var(--fg);
   line-height: 1.5;
 }
 
@@ -1679,12 +2018,12 @@ textarea {
   width: 48px;
   height: 48px;
   border-radius: 8px;
-  background: var(--color-brand);
+  background: var(--accent);
   color: #fff;
   border: 0;
   font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(141, 27, 53, 0.25);
+  box-shadow: 0 6px 16px rgba(196, 30, 58, 0.25);
   z-index: 105;
 }
 
@@ -1692,36 +2031,59 @@ textarea {
   display: none;
 }
 
-@media (max-width: 859px) {
-  .fab-helper {
-    position: static;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 12px 0 0 auto;
-    width: auto;
-    min-width: 88px;
-    height: 38px;
-    padding: 0 14px;
-    border: 1px solid rgba(141, 27, 53, 0.22);
-    background: var(--color-brand-light);
-    color: var(--color-brand);
-    font-size: 14px;
-    font-weight: 700;
-    border-radius: 7px;
-    box-shadow: none;
-  }
-
-  .helper-label-desktop {
-    display: none;
-  }
-
-  .helper-label-mobile {
-    display: inline;
-  }
+/* Review panel */
+.review-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
-/* Review step */
+.review-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.review-panel-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.review-panel-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.review-panel-title-wrap {
+  flex: 1;
+}
+
+.review-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.review-panel-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.review-panel-body {
+  padding: 24px;
+}
+
 .review-header {
   display: flex;
   align-items: center;
@@ -1734,8 +2096,8 @@ textarea {
   align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
-  background: var(--color-error-bg);
-  color: var(--color-brand);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
 }
@@ -1743,12 +2105,12 @@ textarea {
 .review-percent {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .review-progress-track {
   height: 8px;
-  background: #fee2e2;
+  background: var(--accent-soft);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -1756,13 +2118,13 @@ textarea {
 
 .review-progress-bar {
   height: 100%;
-  background: var(--color-brand);
+  background: var(--accent);
   border-radius: 4px;
 }
 
 .review-note {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   margin: 0 0 18px;
 }
 
@@ -1786,7 +2148,7 @@ textarea {
 
 .ai-toolbar-note {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -1799,9 +2161,9 @@ textarea {
 
 .review-card {
   padding: 16px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--color-surface);
+  background: #fff;
 }
 
 .ai-review-card {
@@ -1822,15 +2184,15 @@ textarea {
   flex-shrink: 0;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: var(--color-text-secondary);
+  background: var(--gray-bg);
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
 
 .ai-status-pill.loading {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .ai-status-pill.success {
@@ -1839,8 +2201,8 @@ textarea {
 }
 
 .ai-status-pill.error {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .ai-placeholder,
@@ -1853,15 +2215,15 @@ textarea {
 }
 
 .ai-placeholder {
-  color: var(--color-text-muted);
+  color: var(--gray-hint);
 }
 
 .ai-error {
-  color: #b91c1c;
+  color: var(--accent);
 }
 
 .ai-detail {
-  color: var(--color-text);
+  color: var(--fg);
   margin-bottom: 8px;
 }
 
@@ -1871,8 +2233,8 @@ textarea {
   min-height: 26px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--color-brand-light);
-  color: var(--color-brand);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
   margin-bottom: 8px;
@@ -1881,7 +2243,7 @@ textarea {
 .ai-suggestions {
   margin: 0;
   padding-left: 18px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .ai-annotation-preview {
@@ -1890,7 +2252,7 @@ textarea {
   gap: 10px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
 }
 
 .annotation-copy,
@@ -1904,61 +2266,61 @@ textarea {
 .annotation-copy > strong,
 .annotation-comments > strong {
   font-size: 12px;
-  color: var(--color-text-muted);
+  color: var(--gray-hint);
   letter-spacing: 0;
 }
 
 .annotation-copy p {
   margin: 0;
   padding: 9px 10px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .annotation-copy p.highlighted {
-  border-color: rgba(141, 27, 53, 0.35);
-  background: var(--color-brand-light);
-  color: var(--color-text);
+  border-color: rgba(196, 30, 58, 0.35);
+  background: var(--accent-soft);
+  color: var(--fg);
 }
 
 .annotation-copy span {
   display: inline-flex;
   margin-right: 6px;
   font-weight: 700;
-  color: var(--color-brand);
+  color: var(--accent);
 }
 
 .annotation-comment {
   padding: 9px 10px;
-  border: 1px solid rgba(141, 27, 53, 0.22);
-  border-left: 3px solid var(--color-brand);
+  border: 1px solid rgba(196, 30, 58, 0.22);
+  border-left: 3px solid var(--accent);
   border-radius: 6px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(141, 27, 53, 0.06);
+  box-shadow: 0 8px 20px rgba(196, 30, 58, 0.06);
 }
 
 .annotation-comment > strong {
   display: block;
   margin-bottom: 4px;
-  color: var(--color-brand);
+  color: var(--accent);
 }
 
 .annotation-comment p,
 .annotation-comment small {
   display: block;
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   line-height: 1.6;
   word-break: break-word;
 }
 
 .annotation-comment small {
   margin-top: 4px;
-  color: var(--color-text-muted);
+  color: var(--gray-hint);
 }
 
 .ai-answer {
@@ -1966,7 +2328,7 @@ textarea {
   overflow-wrap: anywhere;
   margin: 0;
   font: inherit;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .ai-parse-warning {
@@ -1979,232 +2341,138 @@ textarea {
   align-self: flex-start;
 }
 
-.score-card {
-  border-color: var(--color-brand);
-  background: var(--color-brand-light);
+/* Submit confirmation */
+.summary-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px;
+  background: #fff;
+  margin-bottom: 20px;
 }
 
-.review-card-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 8px;
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--gray-bg-dark);
 }
 
-.review-card-status {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  margin-bottom: 6px;
+.summary-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-.review-card-status.pass {
-  color: #16a34a;
+.summary-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
-.review-card-desc {
+.summary-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.summary-subtitle {
   font-size: 12px;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
-.score-circle {
+.field-row {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-bg);
+}
+
+.field-row:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.field-value {
+  flex: 1;
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.field-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+.confirm-box {
+  border: 1.5px solid var(--accent);
+  border-radius: 10px;
+  padding: 24px;
+  background: var(--accent-soft);
+  text-align: center;
+  margin: 28px 0;
+}
+
+.confirm-icon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--color-brand);
+  background: var(--accent);
   color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: 800;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  animation: popIn 0.5s ease;
+}
+
+.confirm-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.confirm-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
   margin-bottom: 8px;
 }
 
-/* Submit confirmation */
-.pass-notice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--color-brand);
-  border-radius: 6px;
-  color: var(--color-brand);
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 18px;
-}
-
-.pass-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--color-brand);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.pass-icon::before {
-  content: '';
-  width: 10px;
-  height: 6px;
-  border-left: 2px solid #fff;
-  border-bottom: 2px solid #fff;
-  transform: rotate(-45deg) translateY(-1px);
-}
-
-.submit-card {
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-}
-
-.submit-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.submit-card-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.status-pill {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.submit-checklist {
-  list-style: none;
-  margin: 0 0 20px;
-  padding: 0;
-}
-
-.submit-checklist li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 0;
+.confirm-text {
   font-size: 13px;
-  color: var(--color-text-secondary);
-  border-bottom: 1px solid var(--color-border);
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-.submit-checklist li:last-child {
-  border-bottom: 0;
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.submit-checklist li.ok {
-  color: var(--color-text);
-}
-
-.submit-checklist .check {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  flex-shrink: 0;
-  border: 2px solid var(--color-border-strong);
-  color: var(--color-text-muted);
-}
-
-.submit-checklist li.ok .check {
-  background: var(--color-brand);
-  border-color: var(--color-brand);
-  color: #fff;
-}
-
-.submit-checklist li.ok .check::before {
-  content: "";
-  width: 7px;
-  height: 4px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg) translate(1px, -1px);
-}
-
-.btn-submit-final {
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--color-brand);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-submit-final:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Actions */
-.wizard-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 10px 18px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.05s;
-}
-
-.btn-primary {
-  border: 0;
-  background: var(--color-brand);
-  color: #fff;
-}
-
-.btn-secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.arrow {
-  margin-left: 2px;
-}
-
+/* Login required */
 .login-required-card {
   display: flex;
   flex-direction: column;
@@ -2212,9 +2480,9 @@ textarea {
   justify-content: center;
   gap: 12px;
   padding: 48px 24px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   text-align: center;
 }
 
@@ -2222,13 +2490,13 @@ textarea {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--fg);
 }
 
 .login-required-card p {
   margin: 0;
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   max-width: 360px;
 }
 
@@ -2237,8 +2505,8 @@ textarea {
   height: 40px;
   border-radius: 50%;
   position: relative;
-  background: var(--color-brand-light);
-  color: var(--color-brand);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .login-required-icon::before {
@@ -2279,40 +2547,95 @@ textarea {
   }
 
   .wizard-main {
-    padding: 32px 40px 48px;
+    padding: 32px 48px 48px;
   }
 
   .wizard-title {
     font-size: 28px;
   }
 
-  .wizard-form {
-    padding: 28px;
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 
-  .tip-card {
+  .tag-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ai-review-toolbar {
     flex-direction: row;
-  }
-
-  .row.two-col {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  #ccf-content {
-    min-height: 380px;
-  }
-
-  #ccf-source {
-    min-height: 240px;
-  }
-
-  .review-grid {
-    grid-template-columns: 1fr 1fr;
+    align-items: center;
   }
 
   .ai-annotation-preview {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.65fr);
+  }
+}
+
+@media (max-width: 859px) {
+  .wizard-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wizard-actions-left,
+  .wizard-actions-right {
+    justify-content: center;
+  }
+
+  .fab-helper {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0 0 auto;
+    width: auto;
+    min-width: 88px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid rgba(196, 30, 58, 0.22);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 7px;
+    box-shadow: none;
+  }
+
+  .helper-label-desktop {
+    display: none;
+  }
+
+  .helper-label-mobile {
+    display: inline;
+  }
+}
+
+@media (max-width: 640px) {
+  .wizard-main {
+    padding: 20px 16px;
+  }
+
+  .wizard-title {
+    font-size: 22px;
+  }
+
+  .tag-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-label {
+    width: 90px;
+  }
+
+  .review-panel-body,
+  .summary-card {
+    padding: 20px 16px;
+  }
+
+  .summary-header {
+    padding-bottom: 12px;
   }
 }
 </style>
