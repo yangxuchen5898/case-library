@@ -1,24 +1,16 @@
 <template>
   <div class="app">
     <!-- Header -->
-    <header class="app-header">
-      <div class="header-inner">
+    <header class="topnav">
+      <div class="topnav-inner">
         <!-- Branding -->
-        <div class="brand">
-          <div class="brand-logo">
-            <div class="logo-shu">上大</div>
-          </div>
-          <div class="brand-text">
-            <div class="brand-university">上海大学 / SHANGHAI UNIVERSITY</div>
-            <div class="brand-wordmark">
-              <span class="wordmark-red">强国有我</span>
-              <span class="wordmark-black">思政案例库</span>
-            </div>
-          </div>
+        <div class="topnav-left">
+          <div class="logo-badge">强</div>
+          <div class="logo-text">强国有我 思政案例库</div>
         </div>
 
         <!-- Navigation -->
-        <nav class="main-nav">
+        <nav class="topnav-nav">
           <a
             v-for="item in visibleNavItems"
             :key="item.id"
@@ -30,36 +22,45 @@
           </a>
         </nav>
 
-        <!-- Global header search -->
-        <form class="global-search" @submit.prevent="submitHeaderSearch">
-          <input
-            v-model="headerSearchInput"
-            type="text"
-            placeholder="搜索案例…"
-            aria-label="搜索案例"
-          />
-          <button type="submit" aria-label="查找案例">
+        <!-- Right cluster -->
+        <div class="topnav-right">
+          <form class="search-box" @submit.prevent="submitHeaderSearch">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="7" cy="7" r="5" />
               <path d="M11 11l3.5 3.5" />
             </svg>
-          </button>
-        </form>
+            <input
+              v-model="headerSearchInput"
+              type="text"
+              placeholder="搜索学术资源…"
+              aria-label="搜索案例"
+            />
+          </form>
 
-        <!-- Right cluster: user actions -->
-        <div class="header-actions">
+          <button type="button" class="icon-btn" aria-label="通知">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </button>
+
           <template v-if="isLoggedIn()">
-            <div class="user-chip">
-              <span class="user-avatar">{{ userInitials }}</span>
-              <span class="user-name">{{ displayName }}</span>
-              <button type="button" class="btn-logout" @click="handleLogout">
-                退出
-              </button>
-            </div>
+            <div class="avatar" :title="displayName">{{ userInitials }}</div>
+            <button type="button" class="icon-btn" @click="handleLogout" aria-label="退出登录">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <path d="M21 12H9" />
+              </svg>
+            </button>
           </template>
           <template v-else>
-            <button type="button" class="btn-login" @click="showLogin = true">
-              登录
+            <button type="button" class="icon-btn" @click="showLogin = true" aria-label="登录">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <path d="M15 12H3" />
+              </svg>
             </button>
           </template>
         </div>
