@@ -28,7 +28,7 @@ smoke:
 	python backend/smoke_test_mongo.py
 
 dev-up:
-	docker compose -f docker-compose.dev.yml up -d --build
+	docker compose -f docker-compose.dev.yml up -d --build --wait --wait-timeout 120
 
 dev-seed:
 	docker compose -f docker-compose.dev.yml exec -e ENABLE_DEMO_SEED=true app python scripts/seed_e2e_accounts.py
