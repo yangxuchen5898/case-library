@@ -1613,6 +1613,34 @@ textarea {
   font-size: 12px;
 }
 
+.btn-primary,
+.btn-secondary {
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.05s;
+}
+
+.btn-primary {
+  border: 0;
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.btn-secondary {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .ai-run-btn {
   align-self: flex-start;
 }
