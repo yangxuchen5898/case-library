@@ -86,6 +86,10 @@ make dev-seed
 make smoke-e2e
 ```
 
+`make smoke-e2e` 会启动 `docker-compose.dev.yml`。如果已经用默认
+`docker compose up -d --build` 启动了服务，两个 compose 项目会占用同一组本地端口；
+请先执行 `docker compose down`，或本次直接从 dev compose 启动。
+
 ## 开发约束
 
 - 不提交 `.env`、密钥、私有 URL、代理地址。

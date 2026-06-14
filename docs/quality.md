@@ -43,7 +43,11 @@ docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 make smoke-e2e
 ```
 
-当前 `e2e` profile 运行 `frontend/tests/audit.spec.js`：
+`make smoke-e2e` 会启动 dev compose。若默认 compose 栈已在本机运行，请先
+`docker compose down`，避免 `8001` / `18080` 端口冲突。
+
+当前 `e2e` profile 运行完整 Playwright suite；其中 `frontend/tests/audit.spec.js`
+覆盖：
 
 - `chromium-desktop`：默认管理员强制改密、创建流作者身份不读旧草稿、教师创建/AI
   自查/提交、教师历史版本、管理员版本化段落批注、退回修改后教师查看人工批注并复制
