@@ -69,9 +69,14 @@ from search_engine import CaseSearchEngine
 
 
 def parse_cors_origins(raw_value: str | None) -> list[str]:
-    """Parse comma-separated CORS origins from environment configuration."""
+    """Parse comma-separated CORS origins from environment configuration.
+
+    No default origins are provided: production or unknown environments must
+    explicitly set CORS_ALLOW_ORIGINS. Docker Compose and .env.example supply
+    the local development defaults.
+    """
     if raw_value is None:
-        raw_value = "http://127.0.0.1:18080,http://localhost:18080"
+        return []
     return [origin.strip().rstrip("/") for origin in raw_value.split(",") if origin.strip()]
 
 

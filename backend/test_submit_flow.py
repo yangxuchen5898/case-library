@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 os.environ["MONGODB_DB_NAME"] = f"case_library_submit_flow_test_{uuid4().hex}"
+os.environ["CORS_ALLOW_ORIGINS"] = "http://127.0.0.1:18080,http://localhost:18080"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
