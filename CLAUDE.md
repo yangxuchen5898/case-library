@@ -1,62 +1,52 @@
-# AI Agent Rules
+# AI Agent 规则
 
-This file summarizes project-specific AI behavior rules. Read `AGENTS.md` and
-`docs/project.md` first for the current branch, verification gate, environment,
-and source-of-truth policy.
+本文件记录 Claude Code 或其他 AI agent 在本仓库工作的补充规范。通用开发规范以
+`AGENTS.md` 为准；如需为特定 agent 增加额外约束，可以新增或修改对应的 agent
+专属文件，但不要修改 `AGENTS.md`。
 
-## Repository Boundaries
+## 仓库边界
 
-- Work from `/home/q2635/wsl-workspace/case-library`.
-- Treat `/home/q2635/wsl-workspace/case-library-old` and
-  `/home/q2635/wsl-workspace/case-library-worktree-backup-20260605` as read-only
-  references.
-- Do not copy old files wholesale. Extract behavior or structure, then implement
-  deliberately in the current codebase.
-- Keep local agent prompts, worker captures, screenshots, and reports under
-  ignored `agent-runs/` or local tooling directories.
+- 只在当前仓库内工作，不从历史目录或外部项目整文件复制实现。
+- 本地 agent 提示词、运行记录、截图、审查草稿和临时报告应放在已忽略目录中，不要提交。
+- 不提交与本地编排工具、个人 shell 函数、代理、窗口管理器或临时会话有关的习惯配置。
 
-## Secrets And Data
+## 密钥与数据
 
-- Never print, commit, or expose `AI_API_KEY`, `.env`, account CSVs, Mongo dumps,
-  uploads, browser sessions, or private tokens.
-- `.env.example` may contain configuration names and non-sensitive examples only.
-- Product AI calls must go through the backend. Browser code must never receive
-  provider credentials.
-- Raw data collections and runtime uploads stay outside git unless deliberately
-  transformed into reviewed fixtures or documentation.
+- 不打印、提交或暴露 `AI_API_KEY`、`.env`、账号表、Mongo dump、上传材料、浏览器会话、
+  私有 token、代理地址或私有服务地址。
+- `.env.example` 只能包含配置名和非敏感示例。
+- 产品 AI 调用必须经过后端，浏览器端不得接收模型供应商凭据。
+- 原始运行数据和上传材料不得进入 git，除非已经转化为经过审查的 fixture 或文档。
 
-## AI Product Semantics
+## AI 产品语义
 
-`AI 审核` means author-side pre-submit self-check. It is advisory material for
-human expert review, not automatic approval/rejection and not admin review.
+`AI 审核` 表示作者侧提交前自查，是供人工专家审核参考的建议材料，不代表自动通过、
+自动退回或管理员审核。
 
-Current contract direction:
+当前 alpha 语义：
 
-- Alpha prompt metadata: `GET /api/prompts?category=alpha`, currently
-  `alpha/paragraph-review`
-- Alpha AI review boundary: `POST /api/cases/{case_id}/ai-review`, which creates
-  a versioned read-only paragraph-comment snapshot
-- Legacy workflow prompts under `workflow/*` and `POST /api/ai/chat` are kept as
-  compatibility surfaces, not the alpha teacher review path
-- Submitted advisory records: `ai_reviews`, capped at 3 records
-- No fake AI output when AI is disabled or unavailable
+- prompt 元数据入口：`GET /api/prompts?category=alpha`
+- AI 自查入口：`POST /api/cases/{case_id}/ai-review`
+- AI 自查会生成绑定版本的只读段落批注快照
+- `workflow/*` prompt 和 `POST /api/ai/chat` 是兼容接口，不是 alpha 教师自查主路径
+- 提交给人工审核的 advisory 记录位于 `ai_reviews`，最多保留 3 条
+- AI 禁用或不可用时，不伪造 AI 输出
 
-Keep `docs/api.md`, `docs/project.md`, `docs/prd.md`, `docs/ai.md`, and GitHub
-issues aligned when AI behavior changes.
+修改 AI 行为时，同步 `docs/api.md`、`docs/project.md`、`docs/prd.md`、`docs/ai.md` 和相关
+GitHub Issue。
 
-## Worker Conduct
+## Worker 行为
 
-- Work one GitHub issue at a time.
-- Do not commit, push, delete worktrees, delete Docker volumes, or close issues
-  unless explicitly assigned by the orchestrator/user.
-- Run the narrow relevant checks for the assigned slice and report skipped checks.
-- End worker reports with the requested `DONE <role>` sentinel when a worker
-  prompt requires it.
+- 一次只处理一个 GitHub Issue 或一个聚焦维护切片。
+- 未经明确授权，不提交、不推送、不删除 worktree、不删除 Docker volume、不关闭 issue。
+- 不读取 secrets，不扩大任务范围。
+- 运行与改动范围匹配的检查，并说明未运行的检查。
+- 如果 worker prompt 要求 `DONE <role>` 结尾，最终报告必须包含该哨兵行。
 
-## Verification
+## 验证
 
-Before claiming implementation work is done, use the gate in `docs/project.md`
-or document the smaller justified subset:
+实现或脚手架改动完成前，使用 `docs/project.md` 中的质量门禁；小范围文档变更可以只跑
+最小检查，并在汇报中说明原因。
 
 ```bash
 docker compose run --rm app make check

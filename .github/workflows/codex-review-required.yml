@@ -1,0 +1,73 @@
+name: Codex Review Required
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  check-codex-review:
+    if: >
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request != null)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Codex review comment
+        uses: actions/github-script@v7
+        env:
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request?.number || context.payload.issue.number;
+            let headSha = process.env.HEAD_SHA;
+
+            if (!headSha) {
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number,
+              });
+
+              if (pullRequest.draft) {
+                core.info('Draft PR: Codex review requirement is skipped.');
+                return;
+              }
+
+              headSha = pullRequest.head.sha;
+            }
+
+            const shortSha = headSha.slice(0, 10);
+            const deadline = Date.now() + 10 * 60 * 1000;
+
+            while (Date.now() < deadline) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pull_number,
+                per_page: 100,
+              });
+
+              const codexComment = comments
+                .filter((comment) =>
+                  comment.user?.login === 'chatgpt-codex-connector' &&
+                  /Codex Review:/i.test(comment.body || '')
+                )
+                .find((comment) => (comment.body || '').includes(headSha) || (comment.body || '').includes(shortSha));
+
+              if (codexComment) {
+                core.info(`Codex review found for ${headSha}: ${codexComment.html_url}`);
+                return;
+              }
+
+              core.info('Waiting for Codex review on the current head commit...');
+              await new Promise((resolve) => setTimeout(resolve, 30000));
+            }
+
+            core.setFailed('Codex review is required for the current head commit before merging. Trigger it with "@codex review" or mark the PR ready for review.');
