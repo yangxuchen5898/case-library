@@ -100,6 +100,18 @@ test.describe("manual audit candidate flows", () => {
         })
       );
     });
+    let staleUpdateRequests = 0;
+    await page.route("**/api/cases/999999", async (route) => {
+      staleUpdateRequests += 1;
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: false,
+          detail: "stale caseId should not be used",
+        }),
+      });
+    });
 
     await login(page, USER);
     await page.getByRole("link", { name: "创建案例" }).click();
@@ -117,6 +129,7 @@ test.describe("manual audit candidate flows", () => {
 
     await page.getByRole("button", { name: "保存草稿" }).click();
     await expect(page.getByText("草稿已保存")).toBeVisible();
+    expect(staleUpdateRequests).toBe(0);
     const draft = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("case_library_create_case_draft"))
     );
