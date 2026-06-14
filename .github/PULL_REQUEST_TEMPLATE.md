@@ -22,7 +22,7 @@
 
 ## 合并前检查
 
-- [ ] 已触发 Codex review，或已在评论中执行 `@codex review`
+- [ ] 当前 PR 最后一发 commit 已完成 Codex review，或已在评论中执行 `@codex review` 等待当前 head 审查
 - [ ] 已处理所有 AI review 和人工 review 反馈
 - [ ] 所有 review conversations 已 resolve
 - [ ] CI 和 PR 治理检查均通过

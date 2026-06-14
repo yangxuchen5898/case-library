@@ -73,6 +73,8 @@ docker compose up -d frontend
 - PR 描述必须说明变更范围、验证证据、关联 issue，以及未运行检查的原因。
 - 新建、重新打开、标记 ready for review 或更新 PR 后，应触发 Codex review。也可以在 PR 中评论
   `@codex review` 手动触发。
+- 合并前必须确认该 PR 当前 head，也就是最后一发 commit，已经完成 Codex review。旧 commit
+  上的 review 不能作为新提交后的合并依据。
 - 本仓库已在 PR #100 验证 `@codex review` 可用：`chatgpt-codex-connector` 会回复审查结果。
 - 如果 Codex review 检查早于机器人回复而失败，在 Codex 回复后重新运行该检查，或 push 新提交
   触发检查重跑。

@@ -3,6 +3,10 @@ name: Review Conversations Resolved
 on:
   pull_request:
     types: [opened, ready_for_review, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
 
 permissions:
   contents: read
@@ -18,10 +22,14 @@ jobs:
         with:
           script: |
             const query = `
-              query($owner: String!, $repo: String!, $number: Int!) {
+              query($owner: String!, $repo: String!, $number: Int!, $after: String) {
                 repository(owner: $owner, name: $repo) {
                   pullRequest(number: $number) {
-                    reviewThreads(first: 100) {
+                    reviewThreads(first: 100, after: $after) {
+                      pageInfo {
+                        hasNextPage
+                        endCursor
+                      }
                       nodes {
                         isResolved
                         isOutdated
@@ -39,14 +47,23 @@ jobs:
               }
             `;
 
-            const variables = {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              number: context.payload.pull_request.number,
-            };
+            const threads = [];
+            let after = null;
+            let hasNextPage = true;
 
-            const result = await github.graphql(query, variables);
-            const threads = result.repository.pullRequest.reviewThreads.nodes;
+            while (hasNextPage) {
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                number: context.payload.pull_request.number,
+                after,
+              });
+              const reviewThreads = result.repository.pullRequest.reviewThreads;
+              threads.push(...reviewThreads.nodes);
+              hasNextPage = reviewThreads.pageInfo.hasNextPage;
+              after = reviewThreads.pageInfo.endCursor;
+            }
+
             const unresolved = threads.filter((thread) => !thread.isResolved);
 
             if (unresolved.length > 0) {
