@@ -283,6 +283,127 @@ def main_test() -> None:
     assert direct_pending.get("submitted_at")
     assert direct_pending["submitted_version_id"] == direct_pending_version["id"]
 
+    locked_pending_case = make_case("ownerflow", "pending_review")
+    response = client.put(
+        f"/api/cases/{locked_pending_case}",
+        data={
+            "content": "owner cannot edit pending content",
+            "ai_reviews": json.dumps(
+                [{"prompt_id": "workflow/blocked", "name": "blocked", "answer": "blocked"}]
+            ),
+            "change_reason": "blocked",
+        },
+        headers=auth("ownerflow"),
+    )
+    assert_status(response, 403)
+    stored_locked_pending = get_db().cases.find_one({"id": locked_pending_case})
+    assert stored_locked_pending["content"] == "submit flow test"
+    assert stored_locked_pending["ai_reviews"] == []
+
+    response = client.put(
+        f"/api/cases/{locked_pending_case}",
+        data={"content": "admin can edit pending content", "change_reason": "admin edit"},
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+    stored_locked_pending = get_db().cases.find_one({"id": locked_pending_case})
+    assert stored_locked_pending["content"] == "admin can edit pending content"
+
+    locked_approved_case = make_case("ownerflow", "approved")
+    response = client.put(
+        f"/api/cases/{locked_approved_case}",
+        data={
+            "content": "owner cannot edit approved content",
+            "ai_reviews": json.dumps(
+                [{"prompt_id": "workflow/blocked", "name": "blocked", "answer": "blocked"}]
+            ),
+            "change_reason": "blocked",
+        },
+        headers=auth("ownerflow"),
+    )
+    assert_status(response, 403)
+    stored_locked_approved = get_db().cases.find_one({"id": locked_approved_case})
+    assert stored_locked_approved["content"] == "submit flow test"
+    assert stored_locked_approved["ai_reviews"] == []
+
+    response = client.put(
+        f"/api/cases/{locked_approved_case}",
+        data={"content": "admin can edit approved content", "change_reason": "admin edit"},
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+    stored_locked_approved = get_db().cases.find_one({"id": locked_approved_case})
+    assert stored_locked_approved["content"] == "admin can edit approved content"
+
+    snapshot_case = make_case("ownerflow", "draft")
+    response = client.put(
+        f"/api/cases/{snapshot_case}",
+        data={
+            "title": "approved snapshot title",
+            "type": "SNAPSHOT_APPROVED_TYPE",
+            "theme": "snapshot-approved-theme",
+            "content": "approved snapshot content",
+            "source_material": "approved snapshot source",
+            "change_reason": "prepare snapshot",
+        },
+        headers=auth("ownerflow"),
+    )
+    assert_status(response, 200)
+    response = client.post(f"/api/cases/{snapshot_case}/submit", headers=auth("ownerflow"))
+    assert_status(response, 200)
+    submitted = get_db().cases.find_one({"id": snapshot_case})
+    reviewed_version_id = submitted["submitted_version_id"]
+    response = client.post(
+        f"/api/reviews/{snapshot_case}",
+        data={"comment": "approve snapshot", "status": "approved", "version_id": reviewed_version_id},
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+    response = client.put(
+        f"/api/cases/{snapshot_case}",
+        data={
+            "title": "live edited title",
+            "type": "LIVE_EDITED_TYPE",
+            "theme": "live-edited-theme",
+            "content": "live edited content",
+            "source_material": "live edited source",
+            "change_reason": "admin live edit",
+        },
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+
+    response = client.get(f"/api/cases/{snapshot_case}?increment_view=false")
+    assert_status(response, 200)
+    public_detail = response.json()["data"]
+    assert public_detail["title"] == "approved snapshot title"
+    assert public_detail["type"] == "SNAPSHOT_APPROVED_TYPE"
+    assert public_detail["theme"] == "snapshot-approved-theme"
+    assert public_detail["content"] == "approved snapshot content"
+    assert public_detail["source_material"] == "approved snapshot source"
+    assert_public_case_payload(public_detail)
+
+    response = client.get("/api/cases?status=approved")
+    assert_status(response, 200)
+    public_listed_snapshot = next(
+        item for item in response.json()["data"] if item["id"] == snapshot_case
+    )
+    assert public_listed_snapshot["title"] == "approved snapshot title"
+    assert public_listed_snapshot["content"] == "approved snapshot content"
+
+    response = client.get("/api/search?q=approved%20snapshot")
+    assert_status(response, 200)
+    assert any(item["id"] == snapshot_case for item in response.json()["data"])
+    response = client.get("/api/search?q=live%20edited")
+    assert_status(response, 200)
+    assert all(item["id"] != snapshot_case for item in response.json()["data"])
+    response = client.get("/api/search/advanced?type=SNAPSHOT_APPROVED_TYPE")
+    assert_status(response, 200)
+    assert any(item["id"] == snapshot_case for item in response.json()["data"])
+    response = client.get("/api/search/advanced?type=LIVE_EDITED_TYPE")
+    assert_status(response, 200)
+    assert all(item["id"] != snapshot_case for item in response.json()["data"])
+
     owner_case = make_case("ownerflow", "draft")
     response = client.post(f"/api/cases/{owner_case}/submit", headers=auth("ownerflow"))
     assert_status(response, 200)
