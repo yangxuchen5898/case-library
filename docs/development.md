@@ -24,14 +24,14 @@ curl -I --max-time 8 https://github.com
 curl -I --max-time 8 https://registry-1.docker.io/v2/
 ```
 
-当前环境中 Docker Hub 直连可能超时。可使用 `~/.zshrc` 中的代理函数：
+当前环境中 Docker Hub 直连可能超时。若需要代理，应通过本机环境变量、Docker daemon
+代理配置或团队约定的开发环境配置显式启用，不要把个人 shell 函数写入仓库配置。
 
 ```bash
-zsh -lic 'proxy_on'
+curl -I --max-time 8 https://registry-1.docker.io/v2/
 ```
 
-该函数会写 `/etc/docker/proxy.env` 并可能重启 Docker，需要权限。代理可用时，
-Docker Registry 应返回 `401 Unauthorized`，这是未登录 registry 的正常响应。
+代理可用时，Docker Registry 应返回 `401 Unauthorized`，这是未登录 registry 的正常响应。
 
 ## 常用命令
 
@@ -55,6 +55,29 @@ docker compose down
 docker compose stop frontend
 docker volume rm case-library_frontend_node_modules
 docker compose up -d frontend
+```
+
+## 演示账号与 E2E seed
+
+默认 `docker compose up` 不再创建固定密码的 E2E 演示账号和演示案例。
+`scripts/seed_e2e_accounts.py` 只在 `ENABLE_DEMO_SEED=true` 时执行。
+
+开发/E2E 环境使用 dev compose，默认启用 seed：
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+如需在 dev 环境下也关闭 seed：
+
+```bash
+ENABLE_DEMO_SEED=false docker compose -f docker-compose.dev.yml up -d --build
+```
+
+手动触发 seed：
+
+```bash
+make dev-seed
 ```
 
 ## 开发约束

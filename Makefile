@@ -34,7 +34,7 @@ dev-up:
 	docker compose -f docker-compose.dev.yml up -d --build
 
 dev-seed:
-	docker compose -f docker-compose.dev.yml exec app python scripts/seed_e2e_accounts.py
+	docker compose -f docker-compose.dev.yml exec -e ENABLE_DEMO_SEED=true app python scripts/seed_e2e_accounts.py
 
 dev-e2e:
 	docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
