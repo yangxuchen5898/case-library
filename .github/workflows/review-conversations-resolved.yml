@@ -1,7 +1,7 @@
 name: Review Conversations Resolved
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, ready_for_review, synchronize, reopened]
   pull_request_review:
     types: [submitted, dismissed]

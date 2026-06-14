@@ -1,7 +1,7 @@
 name: Codex Review Required
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, ready_for_review, synchronize, reopened]
   pull_request_review:
     types: [submitted]
@@ -33,6 +33,24 @@ jobs:
             const deadline = Date.now() + 10 * 60 * 1000;
 
             while (Date.now() < deadline) {
+              const issueComments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pull_number,
+                per_page: 100,
+              });
+
+              const codexIssueComment = issueComments.find((comment) =>
+                codexLogins.has(comment.user?.login) &&
+                /Codex Review:?/i.test(comment.body || '') &&
+                ((comment.body || '').includes(headSha) || (comment.body || '').includes(shortSha))
+              );
+
+              if (codexIssueComment) {
+                core.info(`Codex PR conversation comment found for ${headSha}: ${codexIssueComment.html_url}`);
+                return;
+              }
+
               const reviews = await github.paginate(github.rest.pulls.listReviews, {
                 owner,
                 repo,
@@ -45,7 +63,7 @@ jobs:
                   codexLogins.has(review.user?.login) &&
                   review.commit_id === headSha
                 )
-                .find((review) => /Codex Review:/i.test(review.body || ''));
+                .find((review) => /Codex Review:?/i.test(review.body || ''));
 
               if (codexReview) {
                 core.info(`Codex PR review found for ${headSha}: ${codexReview.html_url}`);

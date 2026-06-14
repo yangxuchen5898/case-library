@@ -43,6 +43,20 @@ GitHub Issue。
 - 运行与改动范围匹配的检查，并说明未运行的检查。
 - 如果 worker prompt 要求 `DONE <role>` 结尾，最终报告必须包含该哨兵行。
 
+## PR Review 纪律
+
+- 处理 PR review feedback 时，不能只修改代码；修完对应反馈后必须及时 resolve 对应的
+  GitHub review conversation。
+- resolve review conversation 前，必须先在对应 thread 下回复处理结果。修复类回复写
+  `已在 commit <hash> 修复：<根因和改法>`；不采纳时写
+  `Rebuttal：<不采纳原因和风险判断>`。没有回复说明不得直接 resolve。
+- 合并前看的是当前 PR head，也就是最后一发 commit 的 review 状态。旧 commit 上的
+  Codex review 或人工 review 不能作为新提交后的合并依据。
+- Draft PR 上被 skipped 的治理检查不代表最终可合并；标记 ready for review 后必须重新
+  确认 Codex review、review conversations 和 CI 状态。
+- 读取 Codex review 时要查 PR reviews 和 review comments，不要只看 issue comments；
+  GitHub 页面里的 inline review 可能不会出现在普通 PR timeline comments 中。
+
 ## 验证
 
 实现或脚手架改动完成前，使用 `docs/project.md` 中的质量门禁；小范围文档变更可以只跑
