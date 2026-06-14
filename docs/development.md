@@ -71,19 +71,28 @@ docker compose up -d frontend
 
 - 每个 PR 应聚焦一个 GitHub Issue 或一个明确维护切片，不混入无关重构、格式化或本地工具状态。
 - PR 描述必须说明变更范围、验证证据、关联 issue，以及未运行检查的原因。
-- 新建、重新打开、标记 ready for review 或更新 PR 后，应触发 Codex review。也可以在 PR 中评论
-  `@codex review` 手动触发。
-- 合并前必须确认该 PR 当前 head，也就是最后一发 commit，已经完成 Codex review。旧 commit
-  上的 review 不能作为新提交后的合并依据。
+- 新建、重新打开、标记 ready for review 或更新 PR 后，应触发 Codex review 和 Copilot review。
+  Codex 可以在 PR 中评论 `@codex review` 手动触发；Copilot 按 GitHub 官方流程从
+  Reviewers 菜单请求，或通过仓库设置启用自动 review。
+- 合并前必须确认该 PR 当前 head，也就是最后一发 commit，已经完成 Codex review 和
+  Copilot review。旧 commit 上的 review 不能作为新提交后的合并依据。
 - 本仓库已在 PR #100 验证 `@codex review` 可用：`chatgpt-codex-connector` 会回复审查结果。
-- 如果 Codex review 检查早于机器人回复而失败，在 Codex 回复后重新运行该检查，或 push 新提交
-  触发检查重跑。
-- 机器人审查、人工审查和 CI 反馈必须逐条处理。已修复的评论说明修复提交；不采纳的评论说明理由。
+- 本仓库已在 PR #131 验证 Copilot PR review 可返回正式 review 和 inline comment；Copilot
+  review 可能晚于其他检查完成，且 push 新提交后不会自动 re-review，不能只看 CI 绿就立即合并。
+- 如果 AI review 检查早于机器人回复而失败，在 Codex/Copilot 回复后重新运行该检查，或
+  push 新提交触发检查重跑。
+- 机器人审查、人工审查和 CI 反馈必须逐条处理。已修复的评论必须先回复
+  `已在 commit <hash> 修复：<根因和改法>`，不采纳的评论必须先回复
+  `Rebuttal：<不采纳原因和风险判断>`。
+- 不要直接 resolve review thread；必须先在对应 thread 回复修复 commit 或 rebuttal，再 resolve，
+  方便后续追溯。
 - 所有 PR review conversations 必须在合并前 resolve。未 resolve 的 review thread 视为阻塞合并；
   即使评论已 outdated，只要 GitHub 仍显示未 resolve，也需要手动 resolve。
 - 如果 resolve review thread 后治理检查未自动重跑，在 GitHub Actions 中手动 rerun 对应检查，
   或 push 新提交触发检查重跑。
-- 合并前必须确保必需检查通过，包括 CI、Codex review 检查和 unresolved review thread 检查。
+- 合并前必须确保必需检查通过，包括 CI、AI review 检查和 unresolved review thread 检查。
+- 如果机器人 review 在 merge 后才到达，关联 issue 不应立即关闭；必须记录 follow-up 并处理完
+  新增 review thread。
 - 不要在 PR 评论里粘贴密钥、`.env` 内容、私有 URL、代理配置或未脱敏数据。
 
 推荐分支保护或 ruleset 设置：
