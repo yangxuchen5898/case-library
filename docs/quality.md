@@ -37,6 +37,12 @@ docker compose -f docker-compose.dev.yml up -d --build
 docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 ```
 
+等价的 make 入口：
+
+```bash
+make smoke-e2e
+```
+
 当前 `e2e` profile 运行 `frontend/tests/audit.spec.js`：
 
 - `chromium-desktop`：默认管理员强制改密、创建流作者身份不读旧草稿、教师创建/AI

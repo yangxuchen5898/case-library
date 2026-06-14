@@ -27,9 +27,6 @@ cov:
 smoke:
 	python backend/smoke_test_mongo.py
 
-smoke-e2e:
-	cd frontend && npm run test:e2e
-
 dev-up:
 	docker compose -f docker-compose.dev.yml up -d --build
 
@@ -38,6 +35,8 @@ dev-seed:
 
 dev-e2e:
 	docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
+
+smoke-e2e: dev-up dev-e2e
 
 dev-down:
 	docker compose -f docker-compose.dev.yml down

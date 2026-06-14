@@ -80,6 +80,12 @@ ENABLE_DEMO_SEED=false docker compose -f docker-compose.dev.yml up -d --build
 make dev-seed
 ```
 
+容器化 E2E 入口使用同一套 dev compose seed 路径：
+
+```bash
+make smoke-e2e
+```
+
 ## 开发约束
 
 - 不提交 `.env`、密钥、私有 URL、代理地址。
