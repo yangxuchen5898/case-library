@@ -36,7 +36,8 @@ dev-seed:
 dev-e2e:
 	docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 
-smoke-e2e: dev-up dev-e2e
+smoke-e2e: dev-up
+	cd frontend && npm run test:e2e
 
 dev-down:
 	docker compose -f docker-compose.dev.yml down

@@ -80,22 +80,31 @@ ENABLE_DEMO_SEED=false docker compose -f docker-compose.dev.yml up -d --build
 make dev-seed
 ```
 
-容器化 E2E 入口使用同一套 dev compose seed 路径：
+容器化 E2E 入口使用同一套 dev compose seed 路径，只运行不依赖宿主机 Docker 的
+`frontend/tests/audit.spec.js`：
+
+```bash
+make dev-e2e
+```
+
+完整 smoke E2E 入口会先启动 dev compose，再由宿主机运行完整 Playwright suite：
 
 ```bash
 make smoke-e2e
 ```
 
-`make smoke-e2e` 会启动 `docker-compose.dev.yml`。如果已经用默认
-`docker compose up -d --build` 启动了服务，两个 compose 项目会占用同一组本地端口；
-请先执行 `docker compose down`，或本次直接从 dev compose 启动。
+`make smoke-e2e` 会启动 `docker-compose.dev.yml`。如果已经用默认 `docker compose up
+-d --build` 启动了服务，两个 compose 项目会占用同一组本地端口；请先执行
+`docker compose down`，或本次直接从 dev compose 启动。该入口运行
+`frontend/tests/smoke.spec.js`，测试中会调用宿主机 `docker compose exec`，因此需要在有
+Docker CLI/daemon 的宿主机执行。
 
 ## 开发约束
 
 - 不提交 `.env`、密钥、私有 URL、代理地址。
 - 不提交原始运行数据、Mongo dump、上传材料。
 - 不从历史目录整文件复制实现。
-- 不在宿主机安装或运行项目依赖；使用容器。
+- 优先使用容器运行项目依赖；宿主机入口仅用于需要访问宿主机 Docker 的验证命令。
 - 改 API 时同步 schema、测试和 `docs/api.md`。
 - 改 AI 行为时同步 `docs/ai.md` 和相关测试。
 - 改产品流程时先更新 `docs/prd.md`。
