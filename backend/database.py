@@ -1137,7 +1137,7 @@ def create_ai_review_version(
     return serialize_doc(db.versions.find_one({"id": version_id}))
 
 
-def delete_case(case_id: int) -> dict:
+def delete_case(case_id: int, deleted_by: str = "") -> dict:
     db = get_db()
     case = db.cases.find_one({"id": int(case_id), "status": {"$ne": "deleted"}})
     if not case:
@@ -1150,14 +1150,23 @@ def delete_case(case_id: int) -> dict:
             "theme": None,
         }
 
-    result = db.cases.delete_one({"id": int(case_id)})
-    if result.deleted_count > 0:
-        db.reviews.delete_many({"case_id": int(case_id)})
-        db.versions.delete_many({"case_id": int(case_id)})
-        db.deployments.delete_many({"case_id": int(case_id)})
+    now = _now()
+    updates = {
+        "status": "deleted",
+        "updated_at": now,
+        "deleted_at": now,
+    }
+    if deleted_by:
+        updates["deleted_by"] = deleted_by
+
+    result = db.cases.update_one(
+        {"id": int(case_id), "status": {"$ne": "deleted"}},
+        {"$set": _normalize_datetime_fields(updates)},
+    )
+    # Intentionally keep reviews, versions and deployments for audit/history.
 
     return {
-        "success": result.deleted_count > 0,
+        "success": result.matched_count > 0,
         "was_in_library": bool(case.get("is_in_library", False)),
         "view_count": int(case.get("view_count") or 0),
         "like_count": int(case.get("like_count") or 0),
