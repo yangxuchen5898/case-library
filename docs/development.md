@@ -97,7 +97,8 @@ make smoke-e2e
 -d --build` 启动了服务，两个 compose 项目会占用同一组本地端口；请先执行
 `docker compose down`，或本次直接从 dev compose 启动。该入口运行
 `frontend/tests/smoke.spec.js`，测试中会调用宿主机 `docker compose exec`，因此需要在有
-Docker CLI/daemon 的宿主机执行。
+Docker CLI/daemon 的宿主机执行，并通过 `SMOKE_E2E_COMPOSE_FILE=../docker-compose.dev.yml`
+把测试内的 compose exec 指向同一套 dev compose 服务。
 
 ## 开发约束
 

@@ -37,7 +37,7 @@ dev-e2e:
 	docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e
 
 smoke-e2e: dev-up
-	cd frontend && npm run test:e2e
+	cd frontend && SMOKE_E2E_COMPOSE_FILE=docker-compose.dev.yml npm run test:e2e
 
 dev-down:
 	docker compose -f docker-compose.dev.yml down
