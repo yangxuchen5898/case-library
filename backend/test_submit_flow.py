@@ -118,8 +118,32 @@ def assert_openapi_documented() -> None:
     assert paths["/api/reviews/{case_id}"]["post"].get("security") == [{"HTTPBearer": []}]
 
 
+def assert_cors_is_not_wildcard_with_credentials() -> None:
+    response = client.options(
+        "/api/constants",
+        headers={
+            "Origin": "http://127.0.0.1:18080",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert_status(response, 200)
+    assert response.headers.get("access-control-allow-origin") == "http://127.0.0.1:18080"
+    assert response.headers.get("access-control-allow-credentials") == "true"
+
+    blocked = client.options(
+        "/api/constants",
+        headers={
+            "Origin": "https://example.invalid",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert_status(blocked, 400)
+    assert blocked.headers.get("access-control-allow-origin") is None
+
+
 def main_test() -> None:
     assert_openapi_documented()
+    assert_cors_is_not_wildcard_with_credentials()
 
     create_user("ownerflow", "password123", role="normal", must_change_password=False)
     create_user("otherflow", "password123", role="normal", must_change_password=False)
