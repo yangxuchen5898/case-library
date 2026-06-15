@@ -396,7 +396,9 @@ async def ai_chat(
     if missing:
         raise HTTPException(status_code=400, detail=f"缺少必填变量: {', '.join(missing)}")
 
-    serialized_variables = json.dumps(variables, ensure_ascii=False)
+    allowed_variables = {name: variables[name] for name in prompt.variables}
+
+    serialized_variables = json.dumps(allowed_variables, ensure_ascii=False)
     if len(serialized_variables) > 100_000:
         raise HTTPException(status_code=400, detail="AI 请求内容超过长度限制")
 
@@ -417,8 +419,8 @@ async def ai_chat(
     system_text = prompt.system_content
     user_payload = {
         "prompt_id": prompt.id,
-        "task_input": render_prompt(prompt.content, variables),
-        "variables": variables,
+        "task_input": render_prompt(prompt.content, allowed_variables),
+        "variables": allowed_variables,
     }
     user_text = json.dumps(user_payload, ensure_ascii=False)
     try:

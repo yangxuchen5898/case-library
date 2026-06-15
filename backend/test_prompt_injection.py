@@ -151,6 +151,68 @@ def test_ai_chat_keeps_injection_in_user_json():
                 os.environ[key] = value
 
 
+def test_ai_chat_filters_unknown_variables():
+    create_user("filteruser", "password123", role="normal", must_change_password=False)
+    captured: dict = {}
+
+    def fake_completion(prompt_text, model, settings=None, *, system_content=""):
+        captured["prompt_text"] = prompt_text
+        captured["system_content"] = system_content
+        return json.dumps({"pass": True, "detail": "ok", "suggestions": []})
+
+    old_call_chat_completion = main.call_chat_completion
+    old_env = {
+        key: os.environ.get(key)
+        for key in [
+            "AI_REVIEW_ENABLED",
+            "AI_BASE_URL",
+            "AI_API_KEY",
+            "AI_MODELS",
+            "AI_DEFAULT_MODEL",
+            "AI_TIMEOUT_SECONDS",
+        ]
+    }
+    try:
+        os.environ["AI_REVIEW_ENABLED"] = "true"
+        os.environ["AI_BASE_URL"] = "https://example.invalid/v1"
+        os.environ["AI_API_KEY"] = SECRET_KEY
+        os.environ["AI_MODELS"] = "qwen-plus"
+        os.environ["AI_DEFAULT_MODEL"] = "qwen-plus"
+        os.environ["AI_TIMEOUT_SECONDS"] = "3"
+        main.call_chat_completion = fake_completion
+
+        response = client.post(
+            "/api/ai/chat",
+            json={
+                "prompt_id": "workflow/completeness",
+                "variables": {
+                    "title": "合法标题",
+                    "content": "合法内容",
+                    "access_token": "leaked-secret-token",
+                    "password": "another-secret",
+                },
+            },
+            headers=auth("filteruser"),
+        )
+        assert response.status_code == 200, response.text
+
+        payload = json.loads(captured["prompt_text"])
+        assert payload["variables"] == {"title": "合法标题", "content": "合法内容"}
+        assert "access_token" not in payload["variables"]
+        assert "password" not in payload["variables"]
+        assert "leaked-secret-token" not in captured["prompt_text"]
+        assert "another-secret" not in captured["prompt_text"]
+        assert "合法标题" in payload["task_input"]
+        assert "合法内容" in payload["task_input"]
+    finally:
+        main.call_chat_completion = old_call_chat_completion
+        for key, value in old_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
 def test_ai_review_keeps_injection_in_user_json():
     create_user("reviewuser", "password123", role="normal", must_change_password=False)
     case_id = create_case(
@@ -235,6 +297,7 @@ def main_test() -> None:
     test_render_prompt_preserves_user_braces()
     test_build_paragraph_review_prompt_boundary()
     test_ai_chat_keeps_injection_in_user_json()
+    test_ai_chat_filters_unknown_variables()
     test_ai_review_keeps_injection_in_user_json()
     print("prompt injection boundary checks passed")
 
