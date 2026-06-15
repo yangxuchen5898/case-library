@@ -1492,41 +1492,25 @@ def get_latest_cases(limit: int = 10) -> list[dict]:
 
 
 def get_statistics() -> dict:
-    db = get_db()
-    approved_filter = {**_status_search_filter("approved"), "is_hidden": {"$ne": True}}
+    public_cases = _public_query_cases()
 
-    stats: dict[str, Any] = {"total_cases": db.cases.count_documents(approved_filter)}
-    stats["by_type"] = {
-        row["_id"]: row["count"]
-        for row in db.cases.aggregate(
-            [{"$match": approved_filter}, {"$group": {"_id": "$type", "count": {"$sum": 1}}}]
-        )
-        if row.get("_id") is not None
-    }
-    stats["by_theme"] = {
-        row["_id"]: row["count"]
-        for row in db.cases.aggregate(
-            [{"$match": approved_filter}, {"$group": {"_id": "$theme", "count": {"$sum": 1}}}]
-        )
-        if row.get("_id") is not None
-    }
+    stats: dict[str, Any] = {"total_cases": len(public_cases), "by_type": {}, "by_theme": {}}
+    total_views = 0
+    total_likes = 0
+    for case in public_cases:
+        case_type = case.get("type")
+        if case_type is not None:
+            stats["by_type"][case_type] = stats["by_type"].get(case_type, 0) + 1
 
-    totals = list(
-        db.cases.aggregate(
-            [
-                {"$match": approved_filter},
-                {
-                    "$group": {
-                        "_id": None,
-                        "total_views": {"$sum": {"$ifNull": ["$view_count", 0]}},
-                        "total_likes": {"$sum": {"$ifNull": ["$like_count", 0]}},
-                    }
-                },
-            ]
-        )
-    )
-    stats["total_views"] = int(totals[0]["total_views"]) if totals else 0
-    stats["total_likes"] = int(totals[0]["total_likes"]) if totals else 0
+        case_theme = case.get("theme")
+        if case_theme is not None:
+            stats["by_theme"][case_theme] = stats["by_theme"].get(case_theme, 0) + 1
+
+        total_views += int(case.get("view_count") or 0)
+        total_likes += int(case.get("like_count") or 0)
+
+    stats["total_views"] = total_views
+    stats["total_likes"] = total_likes
     return stats
 
 

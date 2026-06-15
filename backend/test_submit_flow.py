@@ -886,6 +886,51 @@ def main_test() -> None:
     assert stats["total_views"] == 3
     assert stats["total_likes"] == 4
 
+    stats_snapshot_case = make_case("ownerflow", "draft")
+    response = client.put(
+        f"/api/cases/{stats_snapshot_case}",
+        data={
+            "title": "statistics snapshot case",
+            "type": "TYPE_STATS_REVIEWED",
+            "theme": "theme_stats_reviewed",
+            "content": "statistics snapshot content",
+            "change_reason": "prepare statistics snapshot",
+        },
+        headers=auth("ownerflow"),
+    )
+    assert_status(response, 200)
+    response = client.post(f"/api/cases/{stats_snapshot_case}/submit", headers=auth("ownerflow"))
+    assert_status(response, 200)
+    submitted = get_db().cases.find_one({"id": stats_snapshot_case})
+    response = client.post(
+        f"/api/reviews/{stats_snapshot_case}",
+        data={
+            "comment": "approve statistics snapshot",
+            "status": "approved",
+            "version_id": submitted["submitted_version_id"],
+        },
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+    response = client.put(
+        f"/api/cases/{stats_snapshot_case}",
+        data={
+            "type": "TYPE_STATS_LIVE",
+            "theme": "theme_stats_live",
+            "change_reason": "admin live stats edit",
+        },
+        headers=auth("adminflow"),
+    )
+    assert_status(response, 200)
+
+    response = client.get("/api/statistics")
+    assert_status(response, 200)
+    stats = response.json()["data"]
+    assert stats["by_type"]["TYPE_STATS_REVIEWED"] == 1
+    assert stats["by_theme"]["theme_stats_reviewed"] == 1
+    assert "TYPE_STATS_LIVE" not in stats["by_type"]
+    assert "theme_stats_live" not in stats["by_theme"]
+
     response = client.get("/api/trending?limit=20")
     assert_status(response, 200)
     trending_ids = [item["id"] for item in response.json()["data"]]
