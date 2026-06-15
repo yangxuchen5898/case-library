@@ -781,6 +781,7 @@ def create_case(case_data: dict) -> int:
         "content": doc.get("content", ""),
         "source_material": doc.get("source_material", ""),
         "author": doc.get("author", ""),
+        "department": doc.get("department", ""),
         "owner_username": doc.get("owner_username", ""),
         "created_by": doc.get("owner_username") or doc.get("author", ""),
         "paragraphs": split_paragraphs(doc.get("content", "")),
@@ -919,8 +920,40 @@ def count_cases(
 
 
 def _public_query_cases() -> list[dict]:
-    cursor = get_db().cases.find({**_status_search_filter("approved"), "is_hidden": {"$ne": True}})
-    return [item for item in (serialize_public_case(row) for row in cursor) if item is not None]
+    cursor = (
+        get_db()
+        .cases.find({**_status_search_filter("approved"), "is_hidden": {"$ne": True}})
+        .sort("created_at", DESCENDING)
+    )
+    cases = [serialize_case(row) for row in cursor]
+
+    # Batch fetch reviewed versions to avoid N+1 queries per public listing
+    version_ids = []
+    case_version_map: dict[int, list[dict]] = {}
+    for case in cases:
+        reviewed_version_id = case.get("reviewed_version_id")
+        if reviewed_version_id:
+            try:
+                version_id = int(reviewed_version_id)
+                version_ids.append(version_id)
+                case_version_map.setdefault(version_id, []).append(case)
+            except (TypeError, ValueError):
+                pass
+
+    if version_ids:
+        for version in get_db().versions.find({"id": {"$in": version_ids}}):
+            serialized_version = serialize_version(version)
+            if not serialized_version:
+                continue
+            version_id = serialized_version.get("id")
+            if version_id is None:
+                continue
+            for case in case_version_map.get(version_id, []):
+                for field in PUBLIC_REVIEW_SNAPSHOT_FIELDS:
+                    if field in serialized_version:
+                        case[field] = serialized_version.get(field)
+
+    return [item for item in (_public_case_fields(case) for case in cases) if item is not None]
 
 
 def _public_field_matches(item: dict, query: str) -> bool:
@@ -1016,6 +1049,7 @@ def update_case(
             "content": (updated or {}).get("content", ""),
             "source_material": (updated or {}).get("source_material", ""),
             "author": (updated or {}).get("author", ""),
+            "department": (updated or {}).get("department", ""),
             "owner_username": (updated or {}).get("owner_username", ""),
             "created_by": updated_by,
             "paragraphs": split_paragraphs((updated or {}).get("content", "")),
@@ -1062,6 +1096,7 @@ def create_ai_review_version(
         "content": current.get("content", ""),
         "source_material": current.get("source_material", ""),
         "author": current.get("author", ""),
+        "department": current.get("department", ""),
         "owner_username": current.get("owner_username", ""),
         "created_by": reviewer,
         "paragraphs": paragraphs,

@@ -344,6 +344,7 @@ def main_test() -> None:
             "theme": "snapshot-approved-theme",
             "content": "approved snapshot content",
             "source_material": "approved snapshot source",
+            "department": "snapshot department",
             "change_reason": "prepare snapshot",
         },
         headers=auth("ownerflow"),
@@ -367,6 +368,7 @@ def main_test() -> None:
             "theme": "live-edited-theme",
             "content": "live edited content",
             "source_material": "live edited source",
+            "department": "live edited department",
             "change_reason": "admin live edit",
         },
         headers=auth("adminflow"),
@@ -381,6 +383,7 @@ def main_test() -> None:
     assert public_detail["theme"] == "snapshot-approved-theme"
     assert public_detail["content"] == "approved snapshot content"
     assert public_detail["source_material"] == "approved snapshot source"
+    assert public_detail["department"] == "snapshot department"
     assert_public_case_payload(public_detail)
 
     response = client.get("/api/cases?status=approved")
@@ -390,6 +393,7 @@ def main_test() -> None:
     )
     assert public_listed_snapshot["title"] == "approved snapshot title"
     assert public_listed_snapshot["content"] == "approved snapshot content"
+    assert public_listed_snapshot["department"] == "snapshot department"
 
     response = client.get("/api/search?q=approved%20snapshot")
     assert_status(response, 200)
@@ -403,6 +407,81 @@ def main_test() -> None:
     response = client.get("/api/search/advanced?type=LIVE_EDITED_TYPE")
     assert_status(response, 200)
     assert all(item["id"] != snapshot_case for item in response.json()["data"])
+
+    ai_locked_pending = make_case("ownerflow", "pending_review")
+    response = client.post(
+        f"/api/cases/{ai_locked_pending}/ai-review", headers=auth("ownerflow")
+    )
+    assert_status(response, 403)
+
+    ai_locked_approved = make_case("ownerflow", "approved")
+    response = client.post(
+        f"/api/cases/{ai_locked_approved}/ai-review", headers=auth("ownerflow")
+    )
+    assert_status(response, 403)
+
+    # Admin can still trigger AI review (AI disabled in test env -> 503)
+    response = client.post(
+        f"/api/cases/{ai_locked_approved}/ai-review", headers=auth("adminflow")
+    )
+    assert_status(response, 503)
+
+    # Draft owner can still trigger AI review (AI disabled in test env -> 503)
+    ai_draft = make_case("ownerflow", "draft")
+    response = client.post(f"/api/cases/{ai_draft}/ai-review", headers=auth("ownerflow"))
+    assert_status(response, 503)
+
+    # Public listing ordering: newer created_at appears before older
+    older_approved = make_case("ownerflow", "draft")
+    newer_approved = make_case("ownerflow", "draft")
+    for case_id, title, content, created_at in (
+        (older_approved, "ordering older approved", "ordering older approved content", "2020-01-01 08:00:00"),
+        (newer_approved, "ordering newer approved", "ordering newer approved content", "2020-01-02 08:00:00"),
+    ):
+        response = client.put(
+            f"/api/cases/{case_id}",
+            data={
+                "title": title,
+                "content": content,
+                "department": "test",
+                "type": "TYPE_A",
+                "theme": "test",
+                "change_reason": "prepare ordering case",
+            },
+            headers=auth("ownerflow"),
+        )
+        assert_status(response, 200)
+        get_db().cases.update_one(
+            {"id": case_id},
+            {"$set": {"created_at": created_at}},
+        )
+        response = client.post(f"/api/cases/{case_id}/submit", headers=auth("ownerflow"))
+        assert_status(response, 200)
+        submitted = get_db().cases.find_one({"id": case_id})
+        response = client.post(
+            f"/api/reviews/{case_id}",
+            data={
+                "comment": "approve ordering",
+                "status": "approved",
+                "version_id": submitted["submitted_version_id"],
+            },
+            headers=auth("adminflow"),
+        )
+        assert_status(response, 200)
+
+    response = client.get("/api/cases?status=approved")
+    assert_status(response, 200)
+    approved_ids = [item["id"] for item in response.json()["data"]]
+    assert newer_approved in approved_ids
+    assert older_approved in approved_ids
+    assert approved_ids.index(newer_approved) < approved_ids.index(older_approved)
+
+    response = client.get("/api/search?q=ordering")
+    assert_status(response, 200)
+    search_ids = [item["id"] for item in response.json()["data"]]
+    assert newer_approved in search_ids
+    assert older_approved in search_ids
+    assert search_ids.index(newer_approved) < search_ids.index(older_approved)
 
     owner_case = make_case("ownerflow", "draft")
     response = client.post(f"/api/cases/{owner_case}/submit", headers=auth("ownerflow"))

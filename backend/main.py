@@ -797,6 +797,14 @@ async def create_case_ai_review(
     owner_username = get_case_owner_username(case)
     if current_user.get("role") != "admin" and current_user.get("username") != owner_username:
         raise HTTPException(status_code=403, detail="无权审核该案例")
+    if (
+        current_user.get("role") != "admin"
+        and case.get("status") in AUTHOR_LOCKED_REVIEW_STATUSES
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="案例已提交审核或已通过，需退回修改后才能更新审核内容",
+        )
 
     try:
         payload = await request.json()
