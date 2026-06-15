@@ -114,6 +114,7 @@ export function useCaseSubmission({
       clearDraft();
       notify("案例提交成功，请等待专家审核", "success");
       resetCaseState();
+      return true;
     } catch (err) {
       notify(err.message || "提交失败，请稍后重试", "error");
     } finally {
