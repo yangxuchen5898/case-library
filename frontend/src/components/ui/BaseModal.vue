@@ -38,8 +38,31 @@
   </Teleport>
 </template>
 
+<script>
+let bodyLockCount = 0;
+let originalBodyOverflow = '';
+
+function lockBodyScroll() {
+  if (typeof document === 'undefined') return;
+  if (bodyLockCount === 0) {
+    originalBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  bodyLockCount += 1;
+}
+
+function unlockBodyScroll() {
+  if (typeof document === 'undefined' || bodyLockCount === 0) return;
+  bodyLockCount -= 1;
+  if (bodyLockCount === 0) {
+    document.body.style.overflow = originalBodyOverflow;
+    originalBodyOverflow = '';
+  }
+}
+</script>
+
 <script setup>
-import { computed, onMounted, watch } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -53,6 +76,7 @@ const emit = defineEmits(['update:modelValue', 'close']);
 
 const titleId = `modal-title-${Math.random().toString(36).slice(2, 9)}`;
 const hasHeader = computed(() => props.title || false);
+let effectsApplied = false;
 
 function close() {
   emit('update:modelValue', false);
@@ -71,25 +95,32 @@ function onKeydown(event) {
   }
 }
 
+function cleanupModalEffects() {
+  if (typeof document === 'undefined') return;
+  document.removeEventListener('keydown', onKeydown);
+  if (effectsApplied) {
+    unlockBodyScroll();
+    effectsApplied = false;
+  }
+}
+
+function applyModalEffects(open) {
+  if (typeof document === 'undefined') return;
+  cleanupModalEffects();
+  if (open) {
+    document.addEventListener('keydown', onKeydown);
+    lockBodyScroll();
+    effectsApplied = true;
+  }
+}
+
 watch(
   () => props.modelValue,
-  (open) => {
-    if (typeof document === 'undefined') return;
-    if (open) {
-      document.addEventListener('keydown', onKeydown);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.removeEventListener('keydown', onKeydown);
-      document.body.style.overflow = '';
-    }
-  }
+  (open) => applyModalEffects(open),
+  { immediate: true }
 );
 
-onMounted(() => {
-  if (props.modelValue && typeof document !== 'undefined') {
-    document.addEventListener('keydown', onKeydown);
-  }
-});
+onBeforeUnmount(cleanupModalEffects);
 </script>
 
 <style scoped>

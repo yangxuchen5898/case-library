@@ -726,18 +726,18 @@ onMounted(async () => {
   margin: 2px 4px 2px 0;
 }
 
-.modal-footer .btn-like-lg {
+.btn-like-lg {
   padding-left: 18px;
   padding-right: 18px;
 }
 
-.modal-footer .btn-like-lg:hover {
+.btn-like-lg:hover {
   background: var(--color-brand-light);
   border-color: var(--color-brand);
   color: var(--color-brand);
 }
 
-.modal-footer .btn-like-lg.liked {
+.btn-like-lg.liked {
   background: var(--color-brand-light);
   border-color: var(--color-brand);
   color: var(--color-brand);
