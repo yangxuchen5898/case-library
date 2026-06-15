@@ -58,6 +58,6 @@ git diff --check
 ## PR 规范
 
 - 每个 PR 说明变更范围、关联 issue、验证证据和未运行检查的原因。
-- PR 合并前必须处理所有 CI、AI review、人工 review 和 review conversation。
+- PR 合并前必须处理所有 CI、已产生的 AI review、人工 review 和 review conversation。
 - 未 resolve 的 review thread 视为阻塞合并。
 - 具体 PR 流程和分支保护建议见 `docs/development.md`。

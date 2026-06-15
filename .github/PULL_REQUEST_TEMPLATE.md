@@ -22,7 +22,7 @@
 
 ## 合并前检查
 
-- [ ] 当前 PR 最后一发 commit 已完成 Codex review 和 Copilot review；Codex 可用 `@codex review` 触发，Copilot 需从 Reviewers 菜单请求或依赖仓库自动 review
+- [ ] 如额度、环境和权限允许，已在当前 PR 最后一发 commit 上触发 Codex 或 Copilot 至少一个 AI review；无法触发时已在 PR 中说明
 - [ ] 已处理所有 AI review 和人工 review 反馈；修复回复写明 `已在 commit <hash> 修复：...`，不采纳回复写明 `Rebuttal：...`
 - [ ] 所有 review conversations 已先回复、再 resolve
 - [ ] CI 和 PR 治理检查均通过
