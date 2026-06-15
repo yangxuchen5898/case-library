@@ -28,6 +28,7 @@ CASE_STATUSES = {
     "pending_review",
     "approved",
     "needs_revision",
+    "deleted",
 }
 REVIEW_STATUSES = {"pending", "approved", "rejected", "approve", "reject", "needs_revision"}
 USER_ROLES = {"normal", "admin"}
@@ -53,7 +54,14 @@ PUBLIC_REVIEW_SNAPSHOT_FIELDS = [
     "author",
     "department",
 ]
-DATETIME_FIELDS = {"created_at", "updated_at", "submitted_at", "review_at", "deployed_at"}
+DATETIME_FIELDS = {
+    "created_at",
+    "updated_at",
+    "submitted_at",
+    "review_at",
+    "deployed_at",
+    "deleted_at",
+}
 AI_REVIEW_DATETIME_FIELDS = {"reviewed_at", "created_at"}
 BEIJING_TZ = timezone(timedelta(hours=8))
 

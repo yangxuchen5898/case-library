@@ -782,6 +782,9 @@ def main_test() -> None:
 
     response = client.get(f"/api/cases/{soft_delete_case}", headers=auth("ownerflow"))
     assert_status(response, 404)
+    response = client.get("/api/cases?status=deleted", headers=auth("adminflow"))
+    assert_status(response, 200)
+    assert all(item["id"] != soft_delete_case for item in response.json()["data"])
 
     assert get_case(soft_delete_case) is None
     assert get_case(soft_delete_case, include_deleted=True) is not None
