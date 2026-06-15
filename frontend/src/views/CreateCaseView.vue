@@ -77,7 +77,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from "vue";
-import { currentUser, isLoggedIn } from "../api/auth.js";
+import { currentUser } from "../api/auth.js";
 import { createCase, updateCase, submitCaseById } from "../api/cases.js";
 import { notify } from "../utils/toast.js";
 import CreateWizardRail from "../components/create/CreateWizardRail.vue";
