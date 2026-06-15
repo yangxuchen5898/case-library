@@ -13,7 +13,14 @@ os.environ["CORS_ALLOW_ORIGINS"] = "http://127.0.0.1:18080,http://localhost:1808
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import main
-from database import create_case, create_user, get_case, get_db, get_mongo_client, get_user_by_username
+from database import (
+    create_case,
+    create_user,
+    get_case,
+    get_db,
+    get_mongo_client,
+    get_user_by_username,
+)
 from fastapi.testclient import TestClient
 
 client = TestClient(main.app)
