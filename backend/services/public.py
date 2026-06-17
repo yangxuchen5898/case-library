@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from threading import RLock
-from typing import Any
+from typing import Any, cast
 
 from pymongo import DESCENDING
 
@@ -294,10 +294,13 @@ def get_statistics() -> dict:
         expires_at = _statistics_cache.get("expires_at")
         if cached is not None and isinstance(expires_at, datetime) and expires_at > now:
             cached_copy = public_read_cache.get(_STATISTICS_CACHE_KEY) or cached
-            return public_read_cache.set(
-                _STATISTICS_CACHE_KEY,
-                cached_copy,
-                STATISTICS_CACHE_TTL_SECONDS,
+            return cast(
+                dict,
+                public_read_cache.set(
+                    _STATISTICS_CACHE_KEY,
+                    cached_copy,
+                    STATISTICS_CACHE_TTL_SECONDS,
+                ),
             )
 
         public_cases = _public_query_cases()
@@ -328,4 +331,4 @@ def get_statistics() -> dict:
         _statistics_cache["expires_at"] = now + timedelta(
             seconds=max(0, STATISTICS_CACHE_TTL_SECONDS)
         )
-        return cached_stats
+        return cast(dict, cached_stats)

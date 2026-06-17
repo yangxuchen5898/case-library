@@ -8,6 +8,7 @@ import os
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any, cast
 from uuid import uuid4
 
 os.environ["MONGODB_DB_NAME"] = f"case_library_test_submit_flow_{uuid4().hex}"
@@ -1057,7 +1058,7 @@ def main_test() -> None:
                 }
             ]
 
-        public_service._public_query_cases = fake_public_query_cases
+        public_service._public_query_cases = cast(Any, fake_public_query_cases)
         first_stats = get_statistics()
         second_stats = get_statistics()
         assert query_calls["count"] == 1

@@ -19,7 +19,7 @@ from backend.db.datetime import format_beijing_datetime
 
 def _now() -> str:
     """Return the current UTC+8 wall-clock time as a plain string."""
-    return format_beijing_datetime(datetime.now(UTC))
+    return str(format_beijing_datetime(datetime.now(UTC)))
 
 def _bounded_limit(limit: Any, default: int = 50) -> int:
     try:

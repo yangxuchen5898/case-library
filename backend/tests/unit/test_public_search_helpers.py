@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any, cast
 from uuid import uuid4
 
 os.environ["MONGODB_DB_NAME"] = f"case_library_test_public_unit_{uuid4().hex[:8]}"
@@ -182,8 +183,14 @@ def _matches(row: dict, query: dict) -> bool:
 
 def _patch_public_cases(rows: list[dict]):
     old_query_cases = public._public_query_cases
-    public._public_query_cases = (
-        lambda match_filters=None, sort=None, skip=None, limit=None, text_query=None: _query_rows(
+    def fake_public_query_cases(
+        match_filters=None,
+        sort=None,
+        skip=None,
+        limit=None,
+        text_query=None,
+    ):
+        return _query_rows(
             rows,
             match_filters=match_filters,
             sort=sort,
@@ -191,7 +198,8 @@ def _patch_public_cases(rows: list[dict]):
             limit=limit,
             text_query=text_query,
         )
-    )
+
+    public._public_query_cases = cast(Any, fake_public_query_cases)
     return old_query_cases
 
 
@@ -230,23 +238,45 @@ def test_case_search_engine_forwards_arguments():
     old_latest = public_domain_service.get_latest_cases
     old_filter = public_domain_service.filter_cases
     try:
-        public_domain_service.search_cases = lambda query, status, limit: calls.append(
-            ("search", query, status, limit)
-        ) or ["search-result"]
-        public_domain_service.get_recommendation_candidates = lambda case_id, limit: calls.append(
-            ("recommend", case_id, limit)
-        ) or ["recommend-result"]
-        public_domain_service.get_trending_cases = lambda limit: calls.append(
-            ("trending", limit)
-        ) or ["trending-result"]
-        public_domain_service.get_latest_cases = lambda limit: calls.append(
-            ("latest", limit)
-        ) or ["latest-result"]
-        public_domain_service.filter_cases = (
-            lambda type_filter, theme_filter, status_filter, keyword_filter, limit: calls.append(
-                ("filter", type_filter, theme_filter, status_filter, keyword_filter, limit)
-            )
-            or ["filter-result"]
+        def fake_search(query, status, limit):
+            calls.append(("search", query, status, limit))
+            return ["search-result"]
+
+        def fake_recommend(case_id, limit):
+            calls.append(("recommend", case_id, limit))
+            return ["recommend-result"]
+
+        def fake_trending(limit):
+            calls.append(("trending", limit))
+            return ["trending-result"]
+
+        def fake_latest(limit):
+            calls.append(("latest", limit))
+            return ["latest-result"]
+
+        def fake_filter(type_filter, theme_filter, status_filter, keyword_filter, limit):
+            calls.append(("filter", type_filter, theme_filter, status_filter, keyword_filter, limit))
+            return ["filter-result"]
+
+        public_domain_service.search_cases = cast(
+            type(old_search),
+            fake_search,
+        )
+        public_domain_service.get_recommendation_candidates = cast(
+            type(old_recommend),
+            fake_recommend,
+        )
+        public_domain_service.get_trending_cases = cast(
+            type(old_trending),
+            fake_trending,
+        )
+        public_domain_service.get_latest_cases = cast(
+            type(old_latest),
+            fake_latest,
+        )
+        public_domain_service.filter_cases = cast(
+            type(old_filter),
+            fake_filter,
         )
 
         engine = public_domain_service.CaseSearchEngine()
@@ -584,11 +614,17 @@ def test_public_recommendations_trending_and_latest_use_public_cases_only():
     old_get_db = public.get_db
     old_get_case = cases.get_case
     try:
-        public.serialize_public_case = lambda row: row if row and row.get("status") == "approved" else None
-        cases.get_case = lambda case_id: next(
-            (item for item in PUBLIC_CASES if item.get("id") == int(case_id)),
-            None,
-        )
+        def fake_serialize_public_case(row):
+            return row if row and row.get("status") == "approved" else None
+
+        def fake_get_case(case_id):
+            return next(
+                (item for item in PUBLIC_CASES if item.get("id") == int(case_id)),
+                None,
+            )
+
+        public.serialize_public_case = cast(type(old_serialize_public_case), fake_serialize_public_case)
+        cases.get_case = cast(type(old_get_case), fake_get_case)
 
         assert [item["id"] for item in public.get_recommendation_candidates(1, limit=5)] == [3]
         assert [item["id"] for item in public.get_trending_cases(limit=2)] == [2, 1]

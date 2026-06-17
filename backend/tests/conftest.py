@@ -26,7 +26,9 @@ CONTRACT_HELPER_TESTS = {
 
 
 def _is_safe_test_db_name(db_name: str | None) -> bool:
-    return bool(db_name) and any(
+    if not db_name:
+        return False
+    return any(
         db_name.startswith(prefix) and len(db_name) > len(prefix)
         for prefix in SAFE_TEST_DB_PREFIXES
     )

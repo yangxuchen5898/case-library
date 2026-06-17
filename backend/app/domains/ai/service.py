@@ -53,11 +53,19 @@ class AIReviewResult:
 
     @property
     def comments(self) -> list:
-        return self.version.get("ai_review", {}).get("comments", [])
+        ai_review = self.version.get("ai_review")
+        if not isinstance(ai_review, dict):
+            return []
+        comments = ai_review.get("comments", [])
+        return comments if isinstance(comments, list) else []
 
     @property
     def summary(self) -> dict:
-        return self.version.get("ai_review", {}).get("summary", {})
+        ai_review = self.version.get("ai_review")
+        if not isinstance(ai_review, dict):
+            return {}
+        summary = ai_review.get("summary", {})
+        return summary if isinstance(summary, dict) else {}
 
 
 @dataclass(frozen=True)
@@ -100,20 +108,21 @@ def _build_paragraph_review_prompt(case: dict, paragraphs: list[dict]) -> tuple[
     prompt = get_prompt("alpha/paragraph-review")
     if prompt is None:
         raise RuntimeError("Missing runtime prompt: alpha/paragraph-review")
+    case_payload = {
+        "title": case.get("title", ""),
+        "type": case.get("type", ""),
+        "theme": case.get("theme", ""),
+        "source_material": case.get("source_material", ""),
+    }
     user_payload = {
-        "case": {
-            "title": case.get("title", ""),
-            "type": case.get("type", ""),
-            "theme": case.get("theme", ""),
-            "source_material": case.get("source_material", ""),
-        },
+        "case": case_payload,
         "paragraphs": paragraphs,
     }
     prompt_variables = {
-        "title": user_payload["case"]["title"],
-        "type": user_payload["case"]["type"],
-        "theme": user_payload["case"]["theme"],
-        "source_material": user_payload["case"]["source_material"],
+        "title": case_payload["title"],
+        "type": case_payload["type"],
+        "theme": case_payload["theme"],
+        "source_material": case_payload["source_material"],
         "content": json.dumps(user_payload, ensure_ascii=False),
     }
     user_content = render_registry_prompt(prompt, prompt_variables)
@@ -237,6 +246,8 @@ def create_ai_review_request(
 ) -> AIReviewRequest:
     """Create the review request record after auth and request-body validation."""
     case = ensure_case_ai_review_allowed(case_id, current_user)
+    if current_user is None:
+        raise AIServiceHTTPError(401, "请先登录")
 
     requested_model = payload.get("model")
     if requested_model is not None and not isinstance(requested_model, str):

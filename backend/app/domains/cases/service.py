@@ -132,7 +132,12 @@ def get_case_detail_for_user(
     ):
         raise CaseServiceError(404, "案例不存在")
 
-    return serialize_public_case(case) if is_public_reader else case
+    if is_public_reader:
+        public_case = serialize_public_case(case)
+        if public_case is None:
+            raise CaseServiceError(404, "案例不存在")
+        return public_case
+    return case
 
 
 def create_case_for_user(

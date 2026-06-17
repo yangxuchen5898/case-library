@@ -198,6 +198,7 @@ def assert_public_serialization_uses_review_snapshot() -> None:
     finally:
         serializers.get_db = original_get_db
 
+    assert public is not None
     assert public["title"] == "审核通过标题"
     assert public["type"] == "TYPE_APPROVED"
     assert public["theme"] == "approved-theme"

@@ -49,14 +49,14 @@ def _raise_case_error(exc: CaseServiceError) -> None:
     ),
 )
 async def list_cases(
+    request: Request,
     status: str | None = "approved",
     offset: int = 0,
     limit: int = 50,
     author: str | None = None,
-    request: Request = None,
     _credentials: BearerCredentials = OptionalBearer,
 ):
-    current_user = get_current_user(dict(request.headers)) if request else None
+    current_user = get_current_user(dict(request.headers))
     try:
         result = list_cases_for_user(
             status=status,
@@ -82,11 +82,11 @@ async def list_cases(
 )
 async def get_case_detail(
     case_id: int,
+    request: Request,
     increment_view: bool = True,
-    request: Request = None,
     _credentials: BearerCredentials = OptionalBearer,
 ):
-    current_user = get_current_user(dict(request.headers)) if request else None
+    current_user = get_current_user(dict(request.headers))
     try:
         data = get_case_detail_for_user(
             case_id,

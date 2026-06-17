@@ -25,7 +25,7 @@ def require_current_user(request: Request) -> dict:
     current_user = get_current_user(dict(request.headers))
     if not current_user:
         raise HTTPException(status_code=401, detail="请先登录")
-    return current_user
+    return dict(current_user)
 
 
 def ensure_case_history_visible(case_id: int, current_user: dict | None) -> dict:

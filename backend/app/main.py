@@ -115,7 +115,7 @@ def _install_custom_openapi(api: FastAPI) -> None:
         api.openapi_schema = openapi_schema
         return api.openapi_schema
 
-    api.openapi = custom_openapi
+    api.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 def create_app() -> FastAPI:

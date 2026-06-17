@@ -43,6 +43,7 @@ def render_prompt(content: str, variables: dict) -> str:
         return render_prompt_service(content, variables)
     except AIServiceHTTPError as exc:
         _raise_ai_http_error(exc)
+    raise AssertionError("unreachable")
 
 
 def _build_paragraph_review_prompt(case: dict, paragraphs: list[dict]) -> tuple[str, str]:

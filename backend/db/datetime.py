@@ -28,15 +28,17 @@ def normalize_to_beijing_datetime(value: Any) -> Any:
         try:
             parsed = datetime.fromisoformat(parse_text)
         except ValueError:
+            parsed = None
             for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):
                 try:
                     parsed = datetime.strptime(text, fmt)
                     break
                 except ValueError:
-                    parsed = None
+                    continue
             if parsed is None:
                 return value
 
+        assert parsed is not None
         if parsed.tzinfo is not None and parsed.utcoffset() is not None:
             return normalize_to_beijing_datetime(parsed)
         return parsed.replace(tzinfo=None)

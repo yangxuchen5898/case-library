@@ -253,8 +253,10 @@ def count_cases(
     author: str | None = None,
     include_hidden: bool = True,
 ) -> int:
-    return get_db().cases.count_documents(
-        _case_list_filter(status=status, author=author, include_hidden=include_hidden)
+    return int(
+        get_db().cases.count_documents(
+            _case_list_filter(status=status, author=author, include_hidden=include_hidden)
+        )
     )
 
 def set_case_hidden(case_id: int, hidden: bool) -> bool:
@@ -264,14 +266,14 @@ def set_case_hidden(case_id: int, hidden: bool) -> bool:
     )
     if result.matched_count > 0 and result.modified_count > 0:
         invalidate_statistics_cache()
-    return result.matched_count > 0
+    return bool(result.matched_count > 0)
 
 def _values_differ(field: str, current: dict, new_value: Any) -> bool:
     current_value = current.get(field)
     if field == "keywords":
         current_value = _normalize_keywords(current_value)
         new_value = _normalize_keywords(new_value)
-    return current_value != new_value
+    return bool(current_value != new_value)
 
 def update_case(
     case_id: int, case_data: dict, updated_by: str = "system", change_reason: str = ""
@@ -455,7 +457,7 @@ def increment_view_count(case_id: int) -> bool:
     changed = result.matched_count > 0 and result.modified_count > 0
     if changed:
         invalidate_statistics_cache()
-    return changed
+    return bool(changed)
 
 def increment_like_count(case_id: int) -> bool:
     result = get_db().cases.update_one(
@@ -465,7 +467,7 @@ def increment_like_count(case_id: int) -> bool:
     changed = result.matched_count > 0 and result.modified_count > 0
     if changed:
         invalidate_statistics_cache()
-    return changed
+    return bool(changed)
 
 def decrement_like_count(case_id: int) -> bool:
     db = get_db()
@@ -504,4 +506,4 @@ def decrement_like_count(case_id: int) -> bool:
     changed = correction.modified_count > 0
     if changed:
         invalidate_statistics_cache()
-    return changed
+    return bool(changed)

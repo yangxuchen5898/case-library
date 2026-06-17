@@ -161,4 +161,4 @@ def review_case(
 
 def get_reviews(case_id: int) -> list[dict]:
     cursor = get_db().reviews.find({"case_id": int(case_id)}).sort("review_at", DESCENDING)
-    return [serialize_doc(row) for row in cursor]
+    return [serialized for row in cursor if (serialized := serialize_doc(row)) is not None]

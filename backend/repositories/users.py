@@ -75,7 +75,7 @@ def create_user(
         raise ValueError(f"Username already exists: {username}") from exc
 
 def get_users_count() -> int:
-    return get_db().users.count_documents({})
+    return int(get_db().users.count_documents({}))
 
 def serialize_user_public(user: dict | None) -> dict | None:
     serialized = _serialize_user_doc(user)
@@ -87,7 +87,7 @@ def serialize_user_public(user: dict | None) -> dict | None:
 
 def list_users() -> list[dict]:
     cursor = get_db().users.find({}).sort("username", ASCENDING)
-    return [serialize_user_public(user) for user in cursor]
+    return [serialized for user in cursor if (serialized := serialize_user_public(user)) is not None]
 
 def authenticate_user(username: str, password: str) -> dict | None:
     user = get_db().users.find_one({"username": username})
@@ -113,7 +113,7 @@ def set_user_password(username: str, new_password: str, must_change_password: bo
             "$inc": {"token_version": 1},
         },
     )
-    return result.matched_count > 0 and result.modified_count > 0
+    return bool(result.matched_count > 0 and result.modified_count > 0)
 
 def change_user_password(username: str, old_password: str, new_password: str) -> bool:
     user = get_db().users.find_one({"username": username, "status": "active"})
@@ -132,7 +132,7 @@ def change_user_password(username: str, old_password: str, new_password: str) ->
             "$inc": {"token_version": 1},
         },
     )
-    return result.matched_count > 0 and result.modified_count > 0
+    return bool(result.matched_count > 0 and result.modified_count > 0)
 
 def update_user_fields(
     username: str,
@@ -159,7 +159,7 @@ def update_user_fields(
     result = get_db().users.update_one(
         {"username": username}, {"$set": _normalize_datetime_fields(updates)}
     )
-    return result.matched_count > 0 and result.modified_count > 0
+    return bool(result.matched_count > 0 and result.modified_count > 0)
 
 def rename_user(old_username: str, new_username: str) -> bool:
     if not old_username or not new_username:
@@ -169,13 +169,13 @@ def rename_user(old_username: str, new_username: str) -> bool:
             {"username": old_username},
             {"$set": _normalize_datetime_fields({"username": new_username, "updated_at": _now()})},
         )
-        return result.matched_count > 0 and result.modified_count > 0
+        return bool(result.matched_count > 0 and result.modified_count > 0)
     except DuplicateKeyError as exc:
         raise ValueError(f"Username already exists: {new_username}") from exc
 
 def delete_user(username: str) -> bool:
     result = get_db().users.delete_one({"username": username})
-    return result.deleted_count > 0
+    return bool(result.deleted_count > 0)
 
 def clear_users() -> int:
     result = get_db().users.delete_many({})
