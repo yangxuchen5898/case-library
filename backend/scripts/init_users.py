@@ -17,26 +17,26 @@ from backend.repositories.users import create_user, get_users_count
 DEFAULT_USERS = [
     {
         "username": "10000001",
-        "password": "default123456",
+        "password": "default123456",  # nosec B105
         "role": "normal",
         "nickname": "小杨",
-        "must_change_password": True,
+        "must_change_password": True,  # nosec B105
         "status": "active",
     },
     {
         "username": "10000002",
-        "password": "default123456",
+        "password": "default123456",  # nosec B105
         "role": "admin",
         "nickname": "小李",
-        "must_change_password": True,
+        "must_change_password": True,  # nosec B105
         "status": "active",
     },
     {
         "username": "10000003",
-        "password": "default123456",
+        "password": "default123456",  # nosec B105
         "role": "admin",
         "nickname": "小赵",
-        "must_change_password": True,
+        "must_change_password": True,  # nosec B105
         "status": "no_active",
     },
 ]

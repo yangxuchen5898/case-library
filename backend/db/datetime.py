@@ -38,7 +38,8 @@ def normalize_to_beijing_datetime(value: Any) -> Any:
             if parsed is None:
                 return value
 
-        assert parsed is not None
+        if parsed is None:
+            return value
         if parsed.tzinfo is not None and parsed.utcoffset() is not None:
             return normalize_to_beijing_datetime(parsed)
         return parsed.replace(tzinfo=None)

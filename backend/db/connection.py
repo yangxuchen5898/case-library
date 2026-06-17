@@ -42,7 +42,7 @@ def init_db():
     db.users.create_index([("username", ASCENDING)], unique=True)
     db.users.create_index([("role", ASCENDING), ("status", ASCENDING)])
     token_repair = db.users.update_many(
-        {"token_version": {"$exists": False}}, {"$set": {"token_version": 0}}
+        {"token_version": {"$exists": False}}, {"$set": {"token_version": 0}}  # nosec B105
     )
     if token_repair.modified_count:
         print(f"Backfilled token_version on {token_repair.modified_count} legacy user(s)")

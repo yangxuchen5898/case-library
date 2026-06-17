@@ -53,7 +53,9 @@ def has_table(conn: sqlite3.Connection, table_name: str) -> bool:
 def fetch_rows(conn: sqlite3.Connection, table_name: str) -> list[dict]:
     if not has_table(conn, table_name):
         return []
-    return [dict(row) for row in conn.execute(f"SELECT * FROM {table_name}")]
+    if table_name not in TABLES:
+        raise ValueError(f"Unsupported migration table: {table_name}")
+    return [dict(row) for row in conn.execute(f"SELECT * FROM {table_name}")]  # nosec B608
 
 
 def parse_datetime(value: Any) -> datetime | None:

@@ -213,7 +213,7 @@ def parse_import_row(
     try:
         must_change_password = (
             parse_bool(must_change_password_value)
-            if must_change_password_value != ""
+            if must_change_password_value != ""  # nosec B105
             else DEFAULT_IMPORT_MUST_CHANGE_PASSWORD
         )
     except argparse.ArgumentTypeError as exc:
@@ -223,7 +223,7 @@ def parse_import_row(
     if not password and default_password:
         password = default_password
     if not password:
-        if missing_password == "error":
+        if missing_password == "error":  # nosec B105
             errors.append("missing password")
         else:
             password = generate_import_password()
@@ -292,7 +292,10 @@ def build_import_plan(
             errors.append(f"Row {offset}: {'; '.join(row_errors)}")
             continue
 
-        assert parsed is not None
+        if parsed is None:
+            summary.errors += 1
+            errors.append(f"Row {offset}: import row could not be parsed")
+            continue
         first_seen = seen_usernames.get(parsed.username)
         if first_seen is not None:
             summary.errors += 1

@@ -65,7 +65,7 @@ def create_user(
         "nickname": nickname,
         "must_change_password": bool(must_change_password),
         "status": status,
-        "token_version": 0,
+        "token_version": 0,  # nosec B105
         "created_at": _now(),
         "updated_at": _now(),
     }
@@ -110,7 +110,7 @@ def set_user_password(username: str, new_password: str, must_change_password: bo
                     "updated_at": _now(),
                 }
             ),
-            "$inc": {"token_version": 1},
+            "$inc": {"token_version": 1},  # nosec B105
         },
     )
     return bool(result.matched_count > 0 and result.modified_count > 0)
@@ -125,11 +125,11 @@ def change_user_password(username: str, old_password: str, new_password: str) ->
             "$set": _normalize_datetime_fields(
                 {
                     "password": hash_password(new_password),
-                    "must_change_password": False,
+                    "must_change_password": False,  # nosec B105
                     "updated_at": _now(),
                 }
             ),
-            "$inc": {"token_version": 1},
+            "$inc": {"token_version": 1},  # nosec B105
         },
     )
     return bool(result.matched_count > 0 and result.modified_count > 0)

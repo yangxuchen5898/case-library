@@ -16,7 +16,7 @@ typecheck:
 	mypy backend
 
 security:
-	bandit -r backend
+	bandit -c pyproject.toml -r backend
 
 audit:
 	pip-audit -r requirements.txt -r requirements-dev.txt

@@ -28,7 +28,7 @@ class WriteCompensationScope:
         for callback in reversed(self._callbacks):
             try:
                 callback()
-            except Exception:
+            except Exception:  # nosec B112
                 continue
         self._callbacks.clear()
 
