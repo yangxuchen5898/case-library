@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from db.constants import BEIJING_TZ, DATETIME_FIELDS
+from backend.db.constants import BEIJING_TZ, DATETIME_FIELDS
 
 
 def normalize_to_beijing_datetime(value: Any) -> Any:

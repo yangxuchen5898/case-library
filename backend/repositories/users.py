@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import bcrypt
-from db.connection import get_db
-from db.counters import _insert_with_generated_id, sync_counter
-from db.datetime import _normalize_datetime_fields
-from db.validators import (
+from pymongo import ASCENDING
+from pymongo.errors import DuplicateKeyError
+
+from backend.app.domains.cases.serializers import serialize_doc
+from backend.db.connection import get_db
+from backend.db.counters import _insert_with_generated_id, sync_counter
+from backend.db.datetime import _normalize_datetime_fields
+from backend.db.validators import (
     _normalize_token_version,
     _normalize_user_role,
     _now,
     _validate_user_role,
     _validate_user_status,
 )
-from pymongo import ASCENDING
-from pymongo.errors import DuplicateKeyError
-from serializers import serialize_doc
 
 
 def _serialize_user_doc(user: dict | None) -> dict | None:
